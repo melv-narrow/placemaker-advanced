@@ -25,7 +25,7 @@ param(
     [string]$RunId = '',
     [int]$TimeoutSec = 480,
     [switch]$NoWait,
-    [string]$ResultsRoot = 'C:\Users\jack\cs2-area-tool\.forensics\suite\runs',
+    [string]$ResultsRoot = $(if ($env:PLACEMAKER_RESULTS_ROOT) { $env:PLACEMAKER_RESULTS_ROOT } else { Join-Path $env:USERPROFILE '.placemaker\suite\runs' }),
     # The game queue (default without -RunId): the file waits its turn in the machine-wide line and runs in the queue's
     # game with your current build (bin\Release as it is; -Build rebuilds it first). -Direct (or -RunId) feeds a session
     # you started yourself with Run-Suite -Direct -Queue.

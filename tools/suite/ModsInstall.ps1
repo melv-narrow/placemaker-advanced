@@ -26,7 +26,7 @@ $script:MITest = [bool]($env:PLACEMAKER_GAME_QUEUE -and $env:PLACEMAKER_GAME_QUE
 $script:MIRefuse = if ($env:PLACEMAKER_GAME_QUEUE -and -not $env:PLACEMAKER_GAME_QUEUE_MODS) { 'PLACEMAKER_GAME_QUEUE is set without PLACEMAKER_GAME_QUEUE_MODS: a stand-in queue never touches the real Mods\Placemaker' } else { '' }
 # tests: a stand-in runs folder, only together with a stand-in queue root (a variable left in a shell never moves the
 # real queue's suite lock)
-$script:MIRuns = if ($env:PLACEMAKER_GAME_QUEUE -and $env:PLACEMAKER_GAME_QUEUE_RUNS) { $env:PLACEMAKER_GAME_QUEUE_RUNS } else { 'C:\Users\jack\cs2-area-tool\.forensics\suite\runs' }
+$script:MIRuns = if ($env:PLACEMAKER_GAME_QUEUE -and $env:PLACEMAKER_GAME_QUEUE_RUNS) { $env:PLACEMAKER_GAME_QUEUE_RUNS } else { $(if ($env:PLACEMAKER_RESULTS_ROOT) { $env:PLACEMAKER_RESULTS_ROOT } else { Join-Path $env:USERPROFILE '.placemaker\suite\runs' }) }
 # The version of this install state machine, written into install.json: a copy older than the one that last wrote it
 # refuses to touch Mods\Placemaker (two versions never take turns on the same state).
 # 2: install.json carries 'mi'; unreadable state files stop every change instead of reading as missing.

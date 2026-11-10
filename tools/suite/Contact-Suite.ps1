@@ -12,7 +12,7 @@ param(
     [Parameter(Mandatory = $true)][string]$RunId,
     [int]$Columns = 6,
     [int]$ThumbWidth = 256,
-    [string]$ResultsRoot = 'C:\Users\jack\cs2-area-tool\.forensics\suite\runs'
+    [string]$ResultsRoot = $(if ($env:PLACEMAKER_RESULTS_ROOT) { $env:PLACEMAKER_RESULTS_ROOT } else { Join-Path $env:USERPROFILE '.placemaker\suite\runs' })
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing

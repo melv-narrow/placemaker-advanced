@@ -8,7 +8,7 @@
 # change the game makes to them can be shown and undone.
 param([string[]]$Mods = @(), [switch]$AllMods, [string]$Window = '', [switch]$DevMode)
 $ud = Join-Path $env:USERPROFILE 'AppData\LocalLow\Colossal Order\Cities Skylines II'
-$gameDir = 'C:\Program Files (x86)\Steam\steamapps\common\Cities Skylines II'
+$gameDir = $(if ($env:CS2_GAME_PATH) { $env:CS2_GAME_PATH } else { 'C:\Program Files (x86)\Steam\steamapps\common\Cities Skylines II' })
 $exe = Join-Path $gameDir 'Cities2.exe'
 if (Get-Process -Name Cities2 -ErrorAction SilentlyContinue) { Write-Host 'STOP: the game is already running'; exit 2 }
 

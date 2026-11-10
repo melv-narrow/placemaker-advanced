@@ -43,7 +43,7 @@ $script:Q = @{
 }
 $script:QUserData = Join-Path $env:USERPROFILE 'AppData\LocalLow\Colossal Order\Cities Skylines II'
 # Run-Suite's default ResultsRoot (one suite lock for every worktree); a stand-in only with a stand-in queue root (tests)
-$script:QMainRuns = if ($env:PLACEMAKER_GAME_QUEUE -and $env:PLACEMAKER_GAME_QUEUE_RUNS) { $env:PLACEMAKER_GAME_QUEUE_RUNS } else { 'C:\Users\jack\cs2-area-tool\.forensics\suite\runs' }
+$script:QMainRuns = if ($env:PLACEMAKER_GAME_QUEUE -and $env:PLACEMAKER_GAME_QUEUE_RUNS) { $env:PLACEMAKER_GAME_QUEUE_RUNS } else { $(if ($env:PLACEMAKER_RESULTS_ROOT) { $env:PLACEMAKER_RESULTS_ROOT } else { Join-Path $env:USERPROFILE '.placemaker\suite\runs' }) }
 # ETA model (seconds): a build = base + pictures x pic (+ land when it has its own land); a request adds overhead.
 $script:QDefaults = @{ boot = 60.0; quit = 15.0; base = 8.0; pic = 4.5; land = 6.0; overhead = 3.0 }
 # The game's inputs a session is run with: only these (and the mod) make a build's identity. The runner scripts are the

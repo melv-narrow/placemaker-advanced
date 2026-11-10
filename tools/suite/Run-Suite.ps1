@@ -49,7 +49,7 @@ param(
     [switch]$RestoreOnly,
     [switch]$Playground,
     [switch]$DevMode,   # the game's developer mode (-developerMode: debug menus)
-    [string]$ResultsRoot = 'C:\Users\jack\cs2-area-tool\.forensics\suite\runs',
+    [string]$ResultsRoot = $(if ($env:PLACEMAKER_RESULTS_ROOT) { $env:PLACEMAKER_RESULTS_ROOT } else { Join-Path $env:USERPROFILE '.placemaker\suite\runs' }),
     # The game queue (GameQueue.ps1): by default the run waits its turn in the machine-wide line and the queue's game runs
     # it; -Direct launches the game here and now (debugging; refused while any other game is open). -Who names you in line.
     [switch]$Direct,
@@ -81,7 +81,7 @@ if ($HostData) { $repo = (Resolve-Path -LiteralPath $HostData).Path }   # the ga
 # Mods\Placemaker's install state machine and the Paradox launcher check: this script's own copy (the dispatcher's, for
 # the queue's game host)
 . (Join-Path $PSScriptRoot 'ModsInstall.ps1')
-$gameDir ='C:\Program Files (x86)\Steam\steamapps\common\Cities Skylines II'
+$gameDir = $(if ($env:CS2_GAME_PATH) { $env:CS2_GAME_PATH } else { 'C:\Program Files (x86)\Steam\steamapps\common\Cities Skylines II' })
 $exe = Join-Path $gameDir 'Cities2.exe'
 $ud = Join-Path $env:USERPROFILE 'AppData\LocalLow\Colossal Order\Cities Skylines II'
 $suiteData = Join-Path $ud 'ModsData\Placemaker\suite'

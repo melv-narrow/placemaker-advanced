@@ -79,7 +79,7 @@ param(
     [string]$Lands = '',
     [switch]$AllMods,
     [switch]$NoBuild,
-    [string]$ResultsRoot = 'C:\Users\jack\cs2-area-tool\.forensics\suite\runs',
+    [string]$ResultsRoot = $(if ($env:PLACEMAKER_RESULTS_ROOT) { $env:PLACEMAKER_RESULTS_ROOT } else { Join-Path $env:USERPROFILE '.placemaker\suite\runs' }),
     # the game queue (default): waits its turn in the machine-wide line, printing its place and an ETA; -Direct launches now
     [switch]$Direct,
     [string]$Who = ''
