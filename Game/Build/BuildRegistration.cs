@@ -34,6 +34,9 @@ namespace Placemaker.Game.Build
             // after. The service decides first, then the build tool hands the mode to the game.
             updateSystem.UpdateAt<BuildToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateBefore<BuildService, BuildToolSystem>(SystemUpdatePhase.ToolUpdate);
+            // Land restore (fork, Workstream A): before the build service, so an Edit's rebuild never writes the ground in
+            // the frame the old group's ground is put back.
+            updateSystem.UpdateBefore<Placemaker.Game.Restore.LandRestoreSystem, BuildService>(SystemUpdatePhase.ToolUpdate);
             // Ghost preview: temporary surfaces are created in Modification1 and triangulated before ModificationEnd;
             // tagging them there (still Updated) lets AreaBatchSystem (PreCulling) render their material.
             updateSystem.UpdateAt<GhostSurfaceSystem>(SystemUpdatePhase.ModificationEnd);

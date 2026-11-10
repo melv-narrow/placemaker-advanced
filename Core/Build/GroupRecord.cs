@@ -16,7 +16,10 @@ namespace Placemaker.Core.Build
         MissingAssets = 1,
         /// <summary>Some members were removed or replaced by other tools since the build.</summary>
         Modified = 2,
-        /// <summary>Plan included a permanent terrain change (lake basin) that removal cannot undo.</summary>
+        /// <summary>
+        /// Plan changed the ground (terraform, lake basin or paint). Upstream: removal never undid it. Fork: removal puts it
+        /// back when the build has a land snapshot (receipt v3 BuildGuid); builds without one keep their ground.
+        /// </summary>
         PermanentTerrain = 4,
         /// <summary>Group runs the parking economy (fee, upkeep, companion).</summary>
         ParkingEconomy = 8,
@@ -50,6 +53,11 @@ namespace Placemaker.Core.Build
         /// time. Null = not a park type, or built before s17.
         /// </summary>
         public ParkStatsRecord ParkStats;
+        /// <summary>
+        /// (receipt v3) Stable id of this build ("N" format), unique across saves and cities. The group id is not: it is
+        /// max + 1 and comes back after the highest group is removed. Keys the land snapshot sidecar. "" = built before v3.
+        /// </summary>
+        public string BuildGuid = "";
 
         public GroupRecord Clone()
         {

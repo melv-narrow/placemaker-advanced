@@ -514,9 +514,11 @@ namespace Placemaker.Game.Build
             }
             SnapshotPreexisting();
             _groupId = _registry.AllocateId();
+            _buildGuid = Guid.NewGuid().ToString("N");
             var rec = new GroupRecord
             {
                 GroupId = _groupId,
+                BuildGuid = _buildGuid,
                 RecipeId = _request.Recipe?.Id ?? "",
                 RecipeNameKey = _request.Recipe?.NameKey ?? "",
                 CustomName = _request.CustomName ?? "",
@@ -587,7 +589,7 @@ namespace Placemaker.Game.Build
             rec.Upkeep = estimate.Upkeep;
             rec.PrefabNames = new List<string>(_usedPrefabNames);
             rec.PrefabNames.Sort(StringComparer.Ordinal);
-            if (_work.HasPermanentTerrain || HasPaint()) rec.Flags |= GroupFlags.PermanentTerrain;   // terraform and paint are never undone
+            if (_work.HasPermanentTerrain || HasPaint()) rec.Flags |= GroupFlags.PermanentTerrain;   // ground changed (undone on removal when a land snapshot exists)
             if (_work.HasParking && _carrier != Entity.Null) rec.Flags |= GroupFlags.ParkingEconomy;
             if (_request.Recipe != null) rec.Recipe = _request.Recipe.Clone();
             if (_request.Area != null)

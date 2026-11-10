@@ -150,6 +150,34 @@ namespace Placemaker.Tests
         }
 
         [Fact]
+        public void BuildGuidRoundTrips()
+        {
+            var a = Sample();
+            a.BuildGuid = "0123456789abcdef0123456789abcdef";
+            var b = ReceiptCodec.Decode(ReceiptCodec.Encode(a));
+            Assert.Equal(a.BuildGuid, b.BuildGuid);
+            Assert.Equal(a.BuildGuid, a.Clone().BuildGuid);
+        }
+
+        [Fact]
+        public void Version2ReceiptDecodesWithoutBuildGuid()
+        {
+            // A v2 receipt ends after the park stats block: same bytes as v3 minus the last block, with version 2.
+            var a = Sample();
+            a.BuildGuid = "abc";
+            var v3 = ReceiptCodec.Encode(a);
+            // the v3 block is: block length (4) + string length (4) + "abc" (3)
+            var v2 = new byte[v3.Length - (4 + 4 + 3)];
+            System.Array.Copy(v3, v2, v2.Length);
+            v2[4] = 2; v2[5] = 0; v2[6] = 0; v2[7] = 0;
+            var r = ReceiptCodec.Decode(v2);
+            Assert.NotNull(r);
+            Assert.Equal("", r.BuildGuid);
+            Assert.Equal(17, r.GroupId);
+            Assert.NotNull(r.Recipe);
+        }
+
+        [Fact]
         public void CloneIsDeep()
         {
             var a = Sample();

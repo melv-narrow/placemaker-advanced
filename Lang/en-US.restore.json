@@ -1,0 +1,4 @@
+{
+  "Placemaker.Settings.RestoreLandOnRemove": "Put the land back when a build is removed",
+  "Placemaker.Settings.RestoreLandOnRemove.Desc": "Removing a build also undoes the ground shaping and terrain paint it made. Ground or paint you changed yourself after the build is left alone. Builds made before this option existed keep their ground."
+}

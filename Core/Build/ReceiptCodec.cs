@@ -16,8 +16,11 @@ namespace Placemaker.Core.Build
     {
         /// <summary>"PMGR" little-endian.</summary>
         public const uint Magic = 0x52474D50;
-        /// <summary>Bump when appending fields. v1 = initial layout; v2 (s17) = park stats block after the area block.</summary>
-        public const int CurrentVersion = 2;
+        /// <summary>
+        /// Bump when appending fields. v1 = initial layout; v2 (s17) = park stats block after the area block;
+        /// v3 (fork) = build id block (BuildGuid) after the park stats block.
+        /// </summary>
+        public const int CurrentVersion = 3;
 
         // Corrupt data must never make us allocate gigabytes or recurse forever.
         private const int MaxCount = 1_000_000;
@@ -61,6 +64,8 @@ namespace Placemaker.Core.Build
                 var parkStats = r.ParkStats ?? (r.Recipe?.ParkStats != null && !r.Recipe.ParkStats.IsDefault
                     ? new ParkStatsRecord { Settings = r.Recipe.ParkStats.Clone() } : null);
                 Block(w, bw => { bw.Write(parkStats != null); if (parkStats != null) WriteParkStats(bw, parkStats); });
+                // v3: the build's stable id (keys the land snapshot sidecar).
+                Block(w, bw => Str(bw, r.BuildGuid));
                 w.Flush();
                 return ms.ToArray();
             }
@@ -103,7 +108,13 @@ namespace Placemaker.Core.Build
                         r.ParkStats = ReadBlock(rd, br => br.ReadBoolean() ? ReadParkStats(br) : null);
                         if (r.ParkStats?.Settings != null && r.Recipe != null) r.Recipe.ParkStats = r.ParkStats.Settings.Clone();
                     }
-                    // version >= 3 fields would be read here, guarded by `version`.
+                    if (version >= 3 && ms.Position < ms.Length)
+                    {
+                        // A damaged id block costs only the id (the build then keeps its ground on removal), never the receipt.
+                        try { r.BuildGuid = ReadBlock(rd, br => Str(br)) ?? ""; }
+                        catch (Exception) { r.BuildGuid = ""; }
+                    }
+                    // version >= 4 fields would be read here, guarded by `version`.
                     return r;
                 }
             }

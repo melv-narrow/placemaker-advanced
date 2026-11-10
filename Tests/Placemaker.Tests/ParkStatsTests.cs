@@ -264,8 +264,9 @@ namespace Placemaker.Tests
             Assert.Null(back.ParkStats);
             Assert.Null(back.Recipe.ParkStats);
             // A v1 reader's view: the record cut before the v2 block still decodes (newer saves load in older builds).
+            int v3Block = 4 + 4;   // int length + empty BuildGuid string
             int v2Block = 4 + 1;   // int length + "has park stats" flag
-            var cut = bytes.Take(bytes.Length - v2Block).ToArray();
+            var cut = bytes.Take(bytes.Length - v3Block - v2Block).ToArray();
             Assert.NotNull(ReceiptCodec.Decode(cut));
         }
     }

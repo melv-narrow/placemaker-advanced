@@ -30,6 +30,9 @@ namespace Placemaker.Game.Groups
         private ToolSystem _toolSystem;
         private EntityQuery _tempQuery;
 
+        /// <summary>True while any group is waiting to be or being removed (the land restore waits for a whole batch).</summary>
+        public bool Pending => !_requestQuery.IsEmptyIgnoreFilter;
+
         [Preserve]
         protected override void OnCreate()
         {
@@ -175,8 +178,11 @@ namespace Placemaker.Game.Groups
                 // Record goes one pass after the last member so both cascades never stack (PM).
                 if (removal.Passes >= 1)
                 {
+                    RequestLandRestore(group.GroupId, "removed");
                     EntityManager.AddComponent<Deleted>(record);
-                    Mod.Log.Info($"Placemaker removed group {group.GroupId}.");
+                    Mod.Log.Info($"Placemaker removed group {group.GroupId}."
+                        + (_unpinned > 0 ? $" {_unpinned} city road node(s) un-pinned (the build's ground pin removed)." : ""));
+                    _unpinned = 0;
                     ReportLeftovers(group.GroupId);
                     _registry.MarkDirty();
                     return;
@@ -242,6 +248,7 @@ namespace Placemaker.Game.Groups
             {
                 if (n == Entity.Null || !EntityManager.Exists(n) || EntityManager.HasComponent<Deleted>(n)
                     || EntityManager.HasComponent<Temp>(n) || !EntityManager.HasComponent<global::Game.Net.Node>(n)) continue;
+                UnpinSurvivor(n);
                 var edges = new List<Entity>();
                 if (EntityManager.HasBuffer<ConnectedEdge>(n))
                 {
@@ -254,6 +261,35 @@ namespace Placemaker.Game.Groups
                         EntityManager.AddComponent<Updated>(edge);
             }
         }
+
+        /// <summary>
+        /// SPEC A-R8: BuildService.PinMarkerNets gives both end nodes of our marker edges Elevation(0) so the game does not
+        /// refit them to the ground, including a city road's node where a lot drive joins it. Vanilla never leaves a
+        /// top-level node with an all-zero Elevation (GenerateNodesSystem keeps a zero one only for owned or mesh-parented
+        /// nodes), so a surviving city node with exactly that is our pin: it goes with the group. Without this the city
+        /// node keeps counting as "elevated" after the build is gone.
+        /// </summary>
+        private void UnpinSurvivor(Entity n)
+        {
+            if (EntityManager.HasComponent<PlacemakerMember>(n) || EntityManager.HasComponent<global::Game.Common.Owner>(n)) return;
+            if (!EntityManager.HasComponent<global::Game.Net.Elevation>(n)) return;
+            // Another build's marker edge (or a not yet deleted one of this group) still joins here: that pin is still needed.
+            if (EntityManager.HasBuffer<ConnectedEdge>(n))
+            {
+                var buf = EntityManager.GetBuffer<ConnectedEdge>(n, true);
+                for (int i = 0; i < buf.Length; i++)
+                {
+                    var edge = buf[i].m_Edge;
+                    if (EntityManager.Exists(edge) && !EntityManager.HasComponent<Deleted>(edge) && EntityManager.HasComponent<PlacemakerMember>(edge)) return;
+                }
+            }
+            var el = EntityManager.GetComponentData<global::Game.Net.Elevation>(n).m_Elevation;
+            if (el.x != 0f || el.y != 0f) return;
+            EntityManager.RemoveComponent<global::Game.Net.Elevation>(n);
+            _unpinned++;
+        }
+
+        private int _unpinned;
 
         /// <summary>
         /// Playtest 4b: removal must account for everything. Anything still tagged with the group after
@@ -287,6 +323,9 @@ namespace Placemaker.Game.Groups
             // Drop the record and leave the rest as vanilla objects rather than looping forever.
             var g = EntityManager.GetComponentData<PlacemakerGroup>(record);
             Mod.Log.Warn($"Placemaker could not finish removing group {g.GroupId}; remaining elements stay in the city.");
+            // No land restore here: the elements left behind stand on the build's ground, and putting the old ground back
+            // under them would bury or float them. The ground stays with them (logged).
+            Mod.Log.Info($"Placemaker: the ground of group {g.GroupId} stays as built, under the elements left in the city.");
             using (var all = _memberQuery.ToEntityArray(Allocator.Temp))
             using (var tags = _memberQuery.ToComponentDataArray<PlacemakerMember>(Allocator.Temp))
                 for (int i = 0; i < all.Length; i++)
@@ -294,6 +333,27 @@ namespace Placemaker.Game.Groups
                         EntityManager.RemoveComponent<PlacemakerMember>(all[i]);
             EntityManager.AddComponent<Deleted>(record);
             _registry.MarkDirty();
+        }
+
+        /// <summary>Hands the group's build id to the land restore (it runs a few frames later, after the members are gone).</summary>
+        private void RequestLandRestore(int groupId, string why)
+        {
+            try
+            {
+                var rec = _registry.GetRecord(groupId);
+                if (rec == null) return;
+                if (string.IsNullOrEmpty(rec.BuildGuid))
+                {
+                    if ((rec.Flags & GroupFlags.PermanentTerrain) != 0)
+                        Mod.Log.Info($"Placemaker: group {groupId} was built before land snapshots existed; its terraform and paint stay.");
+                    return;
+                }
+                World.GetOrCreateSystemManaged<Placemaker.Game.Restore.LandRestoreSystem>().RequestRestore(rec.BuildGuid, groupId, rec.BuiltAtTicks, why);
+            }
+            catch (Exception e)
+            {
+                Mod.Log.Warn($"Placemaker land restore of group {groupId} could not be requested: {e.Message}");
+            }
         }
 
         internal static long Id(Entity e) => e == Entity.Null ? 0 : ((long)e.Version << 32) | (uint)e.Index;

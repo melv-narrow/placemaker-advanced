@@ -289,6 +289,10 @@ namespace Placemaker.Game.Settings
         [SettingsUISection(SectionMain, GroupBuild)]
         public bool ChargeNetConstruction { get; set; }
 
+        /// <summary>(fork, Workstream A) Removing a build puts back the ground and paint it changed (LandRestoreSystem).</summary>
+        [SettingsUISection(SectionMain, GroupBuild)]
+        public bool RestoreLandOnRemove { get; set; }
+
         [SettingsUISection(SectionMain, GroupBuild)]
         public bool SelectAsOneThing { get; set; }
 
@@ -356,6 +360,7 @@ namespace Placemaker.Game.Settings
                 global::Placemaker.Game.Build.DecalOpacitySystem.FeatureEnabled = SeeThroughDecals;
                 global::Placemaker.Game.Build.BuildService.ChargeNetConstruction = ChargeNetConstruction;
                 global::Placemaker.Game.Build.BuildService.DebugTerrainDump = DebugTerrainDump;
+                global::Placemaker.Game.Restore.LandRestoreSystem.Enabled = RestoreLandOnRemove;
                 global::Placemaker.Game.Build.BuildService.ApplyParkStats = ApplyParkStats;
                 global::Placemaker.Game.Economy.ParkCompanionSystem.Enabled = RealParkStats;
                 global::Placemaker.Game.Groups.OwnerAreaPrefabSystem.FeatureEnabled = SelectAsOneThing;
@@ -409,6 +414,7 @@ namespace Placemaker.Game.Settings
             ChargeNetConstruction = true;
             SelectAsOneThing = true;
             DebugTerrainDump = false;
+            RestoreLandOnRemove = true;
             ApplyParkStats = true;
             RealParkStats = true;
             ConfirmBulldoze = true;

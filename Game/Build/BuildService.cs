@@ -362,7 +362,8 @@ namespace Placemaker.Game.Build
         private void DoWaitReplaced(int frame)
         {
             SetProgress(0.05f);
-            if (!_registry.TryGetRecordEntity(_request.ReplaceGroup, out _)) { Go(Step.ActivateTool); return; }
+            // The new build reads "before" ground for its terraform: wait until the old group's land is back (SPEC A-R9).
+            if (!_registry.TryGetRecordEntity(_request.ReplaceGroup, out _) && !LandRestorePending) { Go(Step.ActivateTool); return; }
             if (frame - _stepFrame > ReplaceTimeoutFrames) ForceIdle(BuildPhase.Failed, "Placemaker.Build.ReplaceFailed");
         }
 
@@ -396,8 +397,12 @@ namespace Placemaker.Game.Build
                 return;
             }
             if (frame - _stepFrame < ToolSwitchFrames + 1) return;
+            // (fork, A) Ground still to be put back (a failed build's rollback, a removal's restore): the "before" capture
+            // must not include it. Bounded: a restore runs within a few frames once no removal is in progress.
+            if (LandRestorePending && frame - _stepFrame < ReplaceTimeoutFrames) return;
             CreateRecord();
             _status.Phase = BuildPhase.Materializing;
+            BeginLandCapture();   // the ground before the first terraform or paint write (removal puts it back)
             Go(_work.Terraform.Count > 0 ? Step.Terraform : AfterTerraform());
             if (_step == Step.Terraform) BeginTerraform();
         }
@@ -603,6 +608,7 @@ namespace Placemaker.Game.Build
             if (_ownerTemp == Entity.Null) NoteSkip("Placemaker.Build.OwnerUnavailable", null, IssueSeverity.Info, 0);
             var issues = ComposeWarnings(dropped);
             var warnings = new List<string>(_warnings);
+            FinishLandCapture();   // the ground as the build left it, saved under the build's id for removal
             DumpFinish(groupId);   // s30: live ground, water, nets and objects to ModsData/Placemaker/debug (when enabled)
             VerifyLiveHollows();   // s55: a bowl in the built ground, with the target's height next to it
             ScanLivePits("after the build");
@@ -655,6 +661,7 @@ namespace Placemaker.Game.Build
         {
             if (frame == _stepFrame)
             {
+                CleanupLand();   // first, so a failure below cannot skip it: not applied, the ground goes back now; applied, the group's removal rolls it back
                 DestroyOwnDefinitions();
                 ClearCarrierSubNets();
                 DiscardTerraformBrushes();
@@ -742,6 +749,9 @@ namespace Placemaker.Game.Build
             ResetProtect();
             ResetZoneBlock();
             _ownerSuppressed = false;
+            if (_land != null || (_landRestore != null && _landRestore.CaptureOpen)) LandRestore.CaptureOpen = false;
+            _land = null;
+            _buildGuid = "";
             _skipped.Clear();
             _notedRings.Clear();
             _dupRetried = false;
