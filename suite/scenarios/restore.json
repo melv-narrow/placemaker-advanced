@@ -1,0 +1,554 @@
+{
+  "set": "restore",
+  "description": "Fork Workstream A: build, remove, look at the ground. Each type twice: land restore off (upstream behaviour, the diagnosis) and on. Probes read the heightmap and paint texels and count what stands on the site; a vanilla road is laid across afterwards. mall-on runs first: its build is the first paint in a fresh city (no user splatmap yet).",
+  "scenarios": [
+    {
+      "id": "mall-on",
+      "site": "flat",
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": true
+        },
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "stripMall",
+          "preset": "classic"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "top",
+          "shot": "removed"
+        }
+      ]
+    },
+    {
+      "id": "mall-off",
+      "site": "flat",
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": false
+        },
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "stripMall",
+          "preset": "classic"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "top",
+          "shot": "removed"
+        }
+      ]
+    },
+    {
+      "id": "parking-off",
+      "site": "slope",
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": false
+        },
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "parking"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-removed"
+        },
+        {
+          "do": "road",
+          "dir": "northsouth"
+        },
+        {
+          "do": "probe",
+          "name": "road",
+          "compare": "removed"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "low",
+          "shot": "road"
+        }
+      ]
+    },
+    {
+      "id": "parking-on",
+      "site": "slope",
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": true
+        },
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "parking"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-removed"
+        },
+        {
+          "do": "road",
+          "dir": "northsouth"
+        },
+        {
+          "do": "probe",
+          "name": "road",
+          "compare": "removed"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "low",
+          "shot": "road"
+        }
+      ]
+    },
+    {
+      "id": "park-garden-off",
+      "site": "rough",
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": false
+        },
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "park",
+          "preset": "garden"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-built"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-removed"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "oblique",
+          "shot": "removed"
+        },
+        {
+          "do": "road",
+          "dir": "eastwest"
+        },
+        {
+          "do": "probe",
+          "name": "road",
+          "compare": "removed"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "low",
+          "shot": "road"
+        }
+      ]
+    },
+    {
+      "id": "park-garden-on",
+      "site": "rough",
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": true
+        },
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "park",
+          "preset": "garden"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-removed"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "oblique",
+          "shot": "removed"
+        },
+        {
+          "do": "road",
+          "dir": "eastwest"
+        },
+        {
+          "do": "probe",
+          "name": "road",
+          "compare": "removed"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "low",
+          "shot": "road"
+        }
+      ]
+    },
+    {
+      "id": "parking-hills-off",
+      "land": {
+        "shape": "rect",
+        "size": [
+          140,
+          110
+        ],
+        "ground": "hills",
+        "amplitude": 7,
+        "wavelength": 90
+      },
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": false
+        },
+        {
+          "do": "area",
+          "tool": "land"
+        },
+        {
+          "do": "type",
+          "layer": "parking"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-built"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-removed"
+        },
+        {
+          "do": "road",
+          "dir": "eastwest"
+        },
+        {
+          "do": "probe",
+          "name": "road",
+          "compare": "removed"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "low",
+          "shot": "road"
+        }
+      ]
+    },
+    {
+      "id": "parking-hills-on",
+      "land": {
+        "shape": "rect",
+        "size": [
+          140,
+          110
+        ],
+        "ground": "hills",
+        "amplitude": 7,
+        "wavelength": 90
+      },
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": true
+        },
+        {
+          "do": "area",
+          "tool": "land"
+        },
+        {
+          "do": "type",
+          "layer": "parking"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-built"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-removed"
+        },
+        {
+          "do": "road",
+          "dir": "eastwest"
+        },
+        {
+          "do": "probe",
+          "name": "road",
+          "compare": "removed"
+        },
+        {
+          "do": "camera",
+          "target": "block",
+          "view": "low",
+          "shot": "road"
+        }
+      ]
+    }
+  ]
+}

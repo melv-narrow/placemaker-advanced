@@ -1,0 +1,123 @@
+{
+  "set": "restore-2",
+  "description": "Fork Workstream A, second check: the first paint in a fresh city (no user splatmap yet), and an Edit (rebuild) of a terraforming park: the old build's ground must come back before the new build reads it, so build, edit-rebuild, remove leaves the land as it was.",
+  "scenarios": [
+    {
+      "id": "mall-fresh-city",
+      "site": "flat",
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": true
+        },
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "stripMall",
+          "preset": "classic"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        }
+      ]
+    },
+    {
+      "id": "garden-edit",
+      "site": "rough",
+      "steps": [
+        {
+          "do": "setting",
+          "name": "RestoreLandOnRemove",
+          "value": true
+        },
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "park",
+          "preset": "garden"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build"
+        },
+        {
+          "do": "probe",
+          "name": "built1",
+          "compare": "before"
+        },
+        {
+          "do": "edit",
+          "build": true
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "build"
+        },
+        {
+          "do": "probe",
+          "name": "built2",
+          "compare": "built1"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-rebuilt"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "terrain",
+          "name": "terrain-removed"
+        }
+      ]
+    }
+  ]
+}

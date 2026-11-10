@@ -42,7 +42,9 @@
     "redo": { "keys": ["via"], "enums": { "via": ["key", "panel"] } },
     "key": { "keys": ["key"], "enums": { "key": ["enter", "esc", "undo", "redo"] } },
     "anarchy": { "keys": ["on"] },
-    "setting": { "keys": ["name", "value"] }
+    "setting": { "keys": ["name", "value"] },
+    "probe": { "keys": ["name", "compare", "margin"] },
+    "road": { "keys": ["dir", "prefab", "margin"], "enums": { "dir": ["eastwest", "northsouth"] } }
   },
   "camera": {
     "keys": ["target", "view", "index", "yaw", "pitch", "distance", "fov", "at", "abs"],
