@@ -34,6 +34,11 @@
     <DeployDir>$(UserDataPath)\Mods\$(AssemblyName)</DeployDir>
     <NoStdLib>true</NoStdLib>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <!-- Compile against the game's own BCL, never the .NET Framework 4.8 reference pack. Without these, MSBuild
+         resolves mscorlib from Microsoft.NETFramework.ReferenceAssemblies (where Queue<T> lives in System.dll),
+         while the game's System.dll forwards Queue<T> to its mscorlib: CS1069 on game 1.6.3f1. -->
+    <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <FrameworkPathOverride>$(ManagedPath)</FrameworkPathOverride>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
