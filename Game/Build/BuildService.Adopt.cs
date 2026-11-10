@@ -601,6 +601,7 @@ namespace Placemaker.Game.Build
                     Attachments = new List<BoundaryAttachment>(_request.Area.Attachments ?? new List<BoundaryAttachment>()),
                 };
             }
+            FinishFarm(rec);
             FinishParkStats(rec);
             if (EntityManager.Exists(_record))
             {

@@ -58,6 +58,8 @@ namespace Placemaker.Game.Build
             updateSystem.UpdateBefore<ParkingCompanionSystem, global::Game.Buildings.InitializeSystem>(SystemUpdatePhase.Modification2);
             updateSystem.UpdateBefore<ParkCompanionSystem, global::Game.Buildings.InitializeSystem>(SystemUpdatePhase.Modification2);
             updateSystem.UpdateAt<ParkCompanionCleanupSystem>(SystemUpdatePhase.PreTool);
+            // (fork, C-R3) fertility check of new working farms once the simulation has run
+            updateSystem.UpdateAt<Placemaker.Game.Economy.FarmWatchSystem>(SystemUpdatePhase.ToolUpdate);
             // Upkeep usage / workers are set before vanilla charges upkeep and hires.
             updateSystem.UpdateBefore<ParkingCompanionUpkeepSystem, global::Game.Simulation.CityServiceUpkeepSystem>(SystemUpdatePhase.GameSimulation);
         }

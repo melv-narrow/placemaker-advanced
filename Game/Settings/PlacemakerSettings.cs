@@ -293,6 +293,10 @@ namespace Placemaker.Game.Settings
         [SettingsUISection(SectionMain, GroupBuild)]
         public bool RestoreLandOnRemove { get; set; }
 
+        /// <summary>(fork, C-R3) Farmstead builds place a working vanilla farm (hub, farm building, field lots). Default off.</summary>
+        [SettingsUISection(SectionMain, GroupBuild)]
+        public bool FarmsProduce { get; set; }
+
         [SettingsUISection(SectionMain, GroupBuild)]
         public bool SelectAsOneThing { get; set; }
 
@@ -361,6 +365,7 @@ namespace Placemaker.Game.Settings
                 global::Placemaker.Game.Build.BuildService.ChargeNetConstruction = ChargeNetConstruction;
                 global::Placemaker.Game.Build.BuildService.DebugTerrainDump = DebugTerrainDump;
                 global::Placemaker.Game.Restore.LandRestoreSystem.Enabled = RestoreLandOnRemove;
+                global::Placemaker.Game.Build.BuildService.FarmEconomy = FarmsProduce;
                 if (global::Placemaker.Game.Build.BuildService.ApplyParkStats != ApplyParkStats
                     || global::Placemaker.Game.Economy.ParkCompanionSystem.Enabled != RealParkStats)
                     global::Placemaker.Game.Groups.GroupRegistrySystem.ParkStatsSettingsChanged = true;
@@ -418,6 +423,7 @@ namespace Placemaker.Game.Settings
             SelectAsOneThing = true;
             DebugTerrainDump = false;
             RestoreLandOnRemove = true;
+            FarmsProduce = false;
             ApplyParkStats = true;
             RealParkStats = true;
             ConfirmBulldoze = true;

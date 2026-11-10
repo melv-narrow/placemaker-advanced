@@ -423,6 +423,7 @@ namespace Placemaker.Game.Build
                 // Same transaction as the build: old trees/props vanish on the one Apply, or not at all.
                 // The owner lot is emitted after validation (Step.OwnerLot) so its overlaps never reject the plan.
                 EmitClearDefinitions();
+                PlanFarm();   // (fork, C-R3) with "Farms produce": where the vanilla farm goes, which planned objects give way
             }
             int end = math.min(total, _emitCursor + DefinitionsPerFrame);
             for (int i = _emitCursor; i < end; i++)
@@ -435,6 +436,7 @@ namespace Placemaker.Game.Build
             SetProgress(0.2f + 0.2f * (total == 0 ? 1f : end / (float)total));
             if (_emitCursor >= total)
             {
+                EmitFarm();
                 _lastMatched = -1;
                 if (_itemByKey.Count == 0)
                 {
@@ -501,6 +503,7 @@ namespace Placemaker.Game.Build
                 BeginCleanup(BuildPhase.Failed, _errorKey, _errorArgs);
                 return;
             }
+            if (FarmVerdict()) return;   // (fork, C-R3) hub, farm building and fields go in together, else the build goes again without the farm
             // (s15) Never demolish an existing building: its touching pieces are left out in place (nets: see ProtectBuildings).
             if (ProtectBuildings() < 0) { BeginCleanup(BuildPhase.Failed, "Placemaker.Build.WouldDemolish"); return; }
             int tagged = TagTemporaries();
@@ -571,6 +574,7 @@ namespace Placemaker.Game.Build
             if (stillTemp > 0 && frame - _stepFrame < ApplyTimeoutFrames) return;
             if (stillTemp > 0) Mod.Log.Warn($"Placemaker: {stillTemp} parts stayed temporary after Apply; they are discarded.");
             AdoptStrays();
+            AdoptFarm();   // (fork, C-R3) the vanilla farm's field lots are the hub's sub-areas: claim them explicitly
             _registry.MarkDirty();
             // Loose builds (road grids) have no group: count what this build claimed and Apply kept.
             int members = LooseBuild ? CountAppliedClaimed() : _registry.CountMembers(_groupId, false);
@@ -752,6 +756,9 @@ namespace Placemaker.Game.Build
             if (_land != null || (_landRestore != null && _landRestore.CaptureOpen)) LandRestore.CaptureOpen = false;
             _land = null;
             _buildGuid = "";
+            _farm = null;
+            _farmBuilt = false;
+            _farmRefused = false;
             _skipped.Clear();
             _notedRings.Clear();
             _dupRetried = false;

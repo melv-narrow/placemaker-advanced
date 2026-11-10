@@ -147,3 +147,32 @@ leisure or park coverage, so a producing farm that also counts as a park double-
 **Recommendation:** keep park stats unchanged while the farm economy setting is off, since today's farms are
 scenery that people visit. When the setting is on, a producing `farmstead` stops getting the park companion.
 `UrbanFarm` and `AnimalPark` keep park stats, since they are visitor places rather than working farms.
+
+## 8. As built (C-R3)
+
+Option A, behind the Options setting **"Farms produce (experimental)"**, off by default.
+
+- A farmstead build emits, in the same definition batch as the rest of the build: the vanilla farm hub
+  ("Agriculture Area Placeholder - Grain" for a crop farm, "- Livestock" when pastures and hay outnumber arable fields),
+  its level 1 farm building attached the way the object tool does it, and one vanilla field lot over each planned field
+  (owned by the hub). The hub's own default field is not emitted.
+- The hub stands at the road like the park companion (same frontage search, sized to the hub's lot). If the yard's
+  barns take the frontage, they give way. Planned crops, rigs, bales, field trees and animal spawners inside the fields
+  are left out: the vanilla fields grow their own crops and animals, and would hide them anyway.
+- Hub, building, fields and the fields' own child lots are group members, so removing the farmstead removes the whole
+  farm. If any piece is missing at validation (or refused under vanilla rules), every farm piece is cancelled and the
+  farmstead is built as scenery.
+- A working farm gets no park companion (C-R2). With the setting off, farmsteads are exactly as before.
+- After the build the simulation is watched: the fields' natural resource is logged, and if no farm company has moved
+  in after a while, a warning says so.
+
+**Seen in the game runner** (`suite/scenarios/farms.json`): crop and dairy farms built on 320 x 240 m plots. Hub,
+building and 7 to 11 fields appeared; the member check passed. A farm company moved into the crop farm on a fertile
+plot and into the dairy farm even on fields with zero fertility (livestock does not depend on it), so the watcher reports
+whether a company actually came, not the fertility alone. Removal left no lot, no field child and no dangling owner
+(the field's own child lot needed explicit removal, see `GroupRemovalSystem.DeleteAreaTree`). With the setting off the
+farmstead was built as before.
+
+**Not seen yet:** workers being hired, harvests and exports (the runner's `grow` step stops as soon as the city stops
+growing, after a few game minutes); behaviour without the mod installed. A removed farm's company goes back to vanilla's
+pool of companies looking for a building, like the ones the game itself spawns.

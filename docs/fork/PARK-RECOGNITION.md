@@ -31,7 +31,9 @@ The log now says exactly why a build has no companion (before, every failure had
   recorded as such (it would give no leisure or coverage).
 - **B3, Manage panel.** Selecting a park build shows "Counts as a park": Yes / Not yet / No: not connected / Tourism
   only / No: park stats are off, with the reason as a tooltip.
-- **B4, no clean frontage.** A relaxed search (accepting an outline up to 12 m from the kerb) was tried and dropped: the
+- **B4, no clean frontage.** Update (C-R3): an outline a few metres short of the kerb now works. The lot's front may
+  reach straight over the verge to the road (never sideways past the outline), which is what the road connection needs.
+  Earlier attempt: A relaxed search (accepting an outline up to 12 m from the kerb) was tried and dropped: the
   companion's front must touch the road for the game to connect it, so a lot pulled inside such an outline would stand
   unconnected. Instead the player gets the specific reason and what to do ("draw the area up to the kerb").
 - **B5, repair.** On load, a companion that was requested but never created, or created and lost since, is requested

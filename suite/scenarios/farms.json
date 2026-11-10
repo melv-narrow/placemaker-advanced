@@ -1,0 +1,395 @@
+{
+  "set": "farms",
+  "description": "Fork C-R3: a farmstead with 'Farms produce' on places a working vanilla farm (hub, farm building, field lots). Probes count the fields, their resource, the farm companies and their workers; after removal nothing of the farm may be left.",
+  "scenarios": [
+    {
+      "id": "arable-farm",
+      "land": {
+        "shape": "rect",
+        "size": [
+          320,
+          240
+        ],
+        "ground": "flat"
+      },
+      "steps": [
+        {
+          "do": "setting",
+          "name": "FarmsProduce",
+          "value": true
+        },
+        {
+          "do": "area",
+          "tool": "land"
+        },
+        {
+          "do": "type",
+          "layer": "farmstead",
+          "preset": "arable"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "camera",
+          "target": "build",
+          "view": "top",
+          "shot": "built-top"
+        },
+        {
+          "do": "grow",
+          "seconds": 90,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "grown",
+          "compare": "built"
+        },
+        {
+          "do": "camera",
+          "target": "build",
+          "view": "oblique",
+          "shot": "grown"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "wait",
+          "seconds": 3
+        },
+        {
+          "do": "grow",
+          "seconds": 20,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "grow",
+          "seconds": 40,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "later",
+          "compare": "removed"
+        }
+      ]
+    },
+    {
+      "id": "dairy-farm",
+      "land": {
+        "shape": "rect",
+        "size": [
+          320,
+          240
+        ],
+        "ground": "flat"
+      },
+      "steps": [
+        {
+          "do": "setting",
+          "name": "FarmsProduce",
+          "value": true
+        },
+        {
+          "do": "area",
+          "tool": "land"
+        },
+        {
+          "do": "type",
+          "layer": "farmstead",
+          "preset": "dairy"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "camera",
+          "target": "build",
+          "view": "top",
+          "shot": "built-top"
+        },
+        {
+          "do": "grow",
+          "seconds": 90,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "grown",
+          "compare": "built"
+        },
+        {
+          "do": "camera",
+          "target": "build",
+          "view": "oblique",
+          "shot": "grown"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "wait",
+          "seconds": 3
+        },
+        {
+          "do": "grow",
+          "seconds": 20,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "grow",
+          "seconds": 40,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "later",
+          "compare": "removed"
+        }
+      ]
+    },
+    {
+      "id": "arable-scenery",
+      "land": {
+        "shape": "rect",
+        "size": [
+          320,
+          240
+        ],
+        "ground": "flat"
+      },
+      "steps": [
+        {
+          "do": "setting",
+          "name": "FarmsProduce",
+          "value": false
+        },
+        {
+          "do": "area",
+          "tool": "land"
+        },
+        {
+          "do": "type",
+          "layer": "farmstead",
+          "preset": "arable"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "camera",
+          "target": "build",
+          "view": "top",
+          "shot": "built-top"
+        },
+        {
+          "do": "grow",
+          "seconds": 90,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "grown",
+          "compare": "built"
+        },
+        {
+          "do": "camera",
+          "target": "build",
+          "view": "oblique",
+          "shot": "grown"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "wait",
+          "seconds": 3
+        },
+        {
+          "do": "grow",
+          "seconds": 20,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "grow",
+          "seconds": 40,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "later",
+          "compare": "removed"
+        }
+      ]
+    },
+    {
+      "id": "arable-vanilla-rules",
+      "land": {
+        "shape": "rect",
+        "size": [
+          320,
+          240
+        ],
+        "ground": "flat"
+      },
+      "steps": [
+        {
+          "do": "setting",
+          "name": "FarmsProduce",
+          "value": true
+        },
+        {
+          "do": "setting",
+          "name": "IgnoreOwnCollisions",
+          "value": false
+        },
+        {
+          "do": "area",
+          "tool": "land"
+        },
+        {
+          "do": "type",
+          "layer": "farmstead",
+          "preset": "arable"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "probe",
+          "name": "before"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "probe",
+          "name": "built",
+          "compare": "before"
+        },
+        {
+          "do": "camera",
+          "target": "build",
+          "view": "top",
+          "shot": "built-top"
+        },
+        {
+          "do": "probe",
+          "name": "grown",
+          "compare": "built"
+        },
+        {
+          "do": "camera",
+          "target": "build",
+          "view": "oblique",
+          "shot": "grown"
+        },
+        {
+          "do": "bulldoze",
+          "target": "owner"
+        },
+        {
+          "do": "wait",
+          "seconds": 3
+        },
+        {
+          "do": "grow",
+          "seconds": 20,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "removed",
+          "compare": "before"
+        },
+        {
+          "do": "grow",
+          "seconds": 40,
+          "fast": true
+        },
+        {
+          "do": "probe",
+          "name": "later",
+          "compare": "removed"
+        },
+        {
+          "do": "setting",
+          "name": "IgnoreOwnCollisions",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

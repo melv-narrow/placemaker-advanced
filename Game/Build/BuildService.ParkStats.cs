@@ -89,6 +89,12 @@ namespace Placemaker.Game.Build
             {
                 var companions = World.GetOrCreateSystemManaged<Economy.ParkCompanionSystem>();
                 if (!companions.Available) return;
+                if (_farmBuilt)
+                {
+                    // (fork, C-R2) A producing farm is industry, not a park: no leisure or park coverage on top of its taxes.
+                    Mod.Log.Info($"Placemaker: group {_groupId} is a working farm; no park companion (attractiveness stays for tourism).");
+                    return;
+                }
                 var outline = BuildOutline();
                 if (outline == null) return;
                 var ring3 = new float3[outline.Length];

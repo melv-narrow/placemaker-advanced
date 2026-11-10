@@ -133,6 +133,10 @@ namespace Placemaker.Tests
             Assert.Equal(ParkCompanionPlanner.WhyBlocked, ParkCompanionPlanner.Find(outline, new[] { Road(-7) }, crowd).DetailKey);
             var ok = ParkCompanionPlanner.Find(outline, new[] { Road(-7) });
             Assert.Equal("", ok.DetailKey);
+            // an outline 4 m short of the kerb still gets a lot: its front reaches over the verge to the road
+            var shortSite = ParkCompanionPlanner.Find(outline, new[] { Road(-11) });
+            Assert.True(shortSite.Found);
+            Assert.Equal(-11 + 6 + ParkCompanionPlanner.CurbGap + 4, shortSite.Position.y, 2);
             // an outline that stops 10 m short of the kerb: not along a road (the player is told to draw up to it)
             Assert.Equal(ParkCompanionPlanner.WhyNotAlongRoad, ParkCompanionPlanner.Find(outline, new[] { Road(-16) }).DetailKey);
         }

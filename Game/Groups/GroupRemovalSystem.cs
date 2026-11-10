@@ -217,6 +217,19 @@ namespace Placemaker.Game.Groups
         /// <summary>Per-kind preparation before Deleted (PLT lessons).</summary>
         private void PrepareDelete(Entity e)
         {
+            DeleteAreaTree(e, 0);
+            // (fork, C-R3) A farm hub's working building is linked by Attachment, not as a sub-object: it goes in the same
+            // pass, so nothing reads Attached.m_Parent of a destroyed hub.
+            if (EntityManager.HasComponent<global::Game.Objects.Attachment>(e))
+            {
+                var att = EntityManager.GetComponentData<global::Game.Objects.Attachment>(e).m_Attached;
+                if (att != Entity.Null && EntityManager.Exists(att) && !EntityManager.HasComponent<Deleted>(att) && !EntityManager.HasComponent<Temp>(att)
+                    && EntityManager.HasComponent<PlacemakerMember>(att))
+                {
+                    DeleteAreaTree(att, 0);
+                    EntityManager.AddComponent<Deleted>(att);
+                }
+            }
             var tag = EntityManager.GetComponentData<PlacemakerMember>(e);
             if (tag.Role == MemberRole.Companion && EntityManager.HasComponent<global::Game.Companies.WorkProvider>(e))
             {
@@ -234,6 +247,25 @@ namespace Placemaker.Game.Groups
                 foreach (var lane in copy)
                     if (EntityManager.Exists(lane) && !EntityManager.HasComponent<Deleted>(lane))
                         EntityManager.AddComponent<Deleted>(lane);
+            }
+        }
+
+        /// <summary>
+        /// (fork, C-R3) Every area below a deleted member goes in the same pass, children before the frame ends: vanilla
+        /// SubElementDeleteSystem cascades one level only, so a vanilla field's own "Field" child, or a field the player added
+        /// to a farm hub after the build, stayed behind with its owner gone (game runner).
+        /// </summary>
+        private void DeleteAreaTree(Entity owner, int depth)
+        {
+            if (depth > 4 || !EntityManager.HasBuffer<global::Game.Areas.SubArea>(owner)) return;
+            var subs = EntityManager.GetBuffer<global::Game.Areas.SubArea>(owner, true);
+            var list = new List<Entity>(subs.Length);
+            for (int i = 0; i < subs.Length; i++) list.Add(subs[i].m_Area);
+            foreach (var a in list)
+            {
+                if (a == Entity.Null || !EntityManager.Exists(a) || EntityManager.HasComponent<Deleted>(a) || EntityManager.HasComponent<Temp>(a)) continue;
+                DeleteAreaTree(a, depth + 1);
+                EntityManager.AddComponent<Deleted>(a);
             }
         }
 

@@ -1,0 +1,7 @@
+{
+  "Placemaker.Settings.FarmsProduce": "Farms produce (experimental)",
+  "Placemaker.Settings.FarmsProduce.Desc": "A farmstead also places a working vanilla farm: a farm building at the road and a vanilla field over each planned field. A farm company moves in where the land is fertile, hires workers, produces crops or livestock, sends trucks and pays industrial tax. Trees and props inside the fields are left out, because the fields grow their own crops. Off: farmsteads are scenery, as before.",
+  "Placemaker.Farm.NoPrefab": "No vanilla farm was found in this game: the farmstead is scenery.",
+  "Placemaker.Farm.NoFrontage": "No room for the farm building at a road: the farmstead is scenery. Draw the area up to a road.",
+  "Placemaker.Farm.Refused": "The game refused part of the working farm: the farmstead was built as scenery instead."
+}

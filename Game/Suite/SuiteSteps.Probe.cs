@@ -143,6 +143,16 @@ namespace Placemaker.Game.Suite
                     var nodes = em.GetBuffer<global::Game.Areas.Node>(e, true);
                     if (nodes.Length == 0 || !In(nodes[0].m_Position.xz)) continue;
                     Inc(em.HasComponent<global::Game.Areas.Surface>(e) ? "areas.surface" : em.HasComponent<global::Game.Areas.Lot>(e) ? "areas.lot" : "areas.other");
+                    if (em.HasComponent<global::Game.Areas.Lot>(e))
+                    {
+                        var lots = rec["lots"] as JArray ?? (JArray)(rec["lots"] = new JArray());
+                        if (lots.Count < 40)
+                        {
+                            var owner = em.HasComponent<global::Game.Common.Owner>(e) ? em.GetComponentData<global::Game.Common.Owner>(e).m_Owner : Entity.Null;
+                            string ownerText = owner == Entity.Null ? "no owner" : !em.Exists(owner) ? "owner gone" : em.HasComponent<Deleted>(owner) ? "owner deleted" : "owner " + _lookup.PrefabName(owner);
+                            lots.Add($"{_lookup.PrefabName(e)} #{e.Index}: {ownerText}{(em.HasComponent<PlacemakerMember>(e) ? ", member " + em.GetComponentData<PlacemakerMember>(e).GroupId : "")}");
+                        }
+                    }
                 }
 
             using (var q = em.CreateEntityQuery(ComponentType.ReadOnly<global::Game.Objects.Object>(), ComponentType.ReadOnly<global::Game.Objects.Transform>(),
@@ -151,6 +161,52 @@ namespace Placemaker.Game.Suite
                 foreach (var e in all)
                     if (In(em.GetComponentData<global::Game.Objects.Transform>(e).m_Position.xz))
                         Inc(em.HasComponent<global::Game.Buildings.Building>(e) ? "objects.building" : "objects.other");
+
+            // (fork, C-R3) a working farm: its fields (fertility, harvest), and the companies renting its buildings
+            using (var q = em.CreateEntityQuery(ComponentType.ReadOnly<global::Game.Areas.Extractor>(), ComponentType.ReadOnly<global::Game.Areas.Node>(),
+                ComponentType.Exclude<Deleted>(), ComponentType.Exclude<Temp>()))
+            using (var all = q.ToEntityArray(Allocator.Temp))
+            {
+                double fertility = 0, extracted = 0;
+                foreach (var e in all)
+                {
+                    var nodes = em.GetBuffer<global::Game.Areas.Node>(e, true);
+                    if (nodes.Length == 0 || !In(nodes[0].m_Position.xz)) continue;
+                    Inc("farm.fields");
+                    var x = em.GetComponentData<global::Game.Areas.Extractor>(e);
+                    fertility += x.m_ResourceAmount;
+                    extracted += x.m_TotalExtracted;
+                }
+                if (c.ContainsKey("farm.fields")) { c["farm.resource"] = (int)Math.Round(fertility); c["farm.extracted"] = (int)Math.Round(extracted); }
+            }
+            using (var q = em.CreateEntityQuery(ComponentType.ReadOnly<global::Game.Buildings.Building>(), ComponentType.ReadOnly<global::Game.Buildings.Renter>(),
+                ComponentType.ReadOnly<global::Game.Objects.Transform>(), ComponentType.Exclude<Deleted>(), ComponentType.Exclude<Temp>()))
+            using (var all = q.ToEntityArray(Allocator.Temp))
+                foreach (var e in all)
+                {
+                    if (!In(em.GetComponentData<global::Game.Objects.Transform>(e).m_Position.xz) || !em.HasComponent<global::Game.Objects.Attached>(e)) continue;
+                    Inc("farm.buildings");
+                    var renters = em.GetBuffer<global::Game.Buildings.Renter>(e, true);
+                    for (int i = 0; i < renters.Length; i++)
+                    {
+                        var co = renters[i].m_Renter;
+                        if (!em.Exists(co) || !em.HasComponent<global::Game.Companies.ExtractorCompany>(co)) continue;
+                        Inc("farm.companies");
+                        if (em.HasBuffer<global::Game.Companies.Employee>(co)) c["farm.workers"] = (c.TryGetValue("farm.workers", out var w) ? w : 0) + em.GetBuffer<global::Game.Companies.Employee>(co, true).Length;
+                    }
+                }
+
+            // city-wide: every farm company, and those without a building (an orphan left by a removed farm)
+            using (var q = em.CreateEntityQuery(ComponentType.ReadOnly<global::Game.Companies.ExtractorCompany>(), ComponentType.Exclude<Deleted>(), ComponentType.Exclude<Temp>()))
+            using (var all = q.ToEntityArray(Allocator.Temp))
+                foreach (var e in all)
+                {
+                    Inc("city.extractorCompanies");
+                    bool housed = em.HasComponent<global::Game.Buildings.PropertyRenter>(e)
+                        && em.Exists(em.GetComponentData<global::Game.Buildings.PropertyRenter>(e).m_Property)
+                        && !em.HasComponent<Deleted>(em.GetComponentData<global::Game.Buildings.PropertyRenter>(e).m_Property);
+                    if (!housed) Inc("city.extractorCompaniesHomeless");
+                }
 
             var elevated = new JArray();
             using (var q = em.CreateEntityQuery(ComponentType.ReadOnly<Edge>(), ComponentType.ReadOnly<Curve>(), ComponentType.Exclude<Deleted>(), ComponentType.Exclude<Temp>()))

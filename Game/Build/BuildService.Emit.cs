@@ -356,6 +356,7 @@ namespace Placemaker.Game.Build
             var prefab = PrefabOf(w);
             if (prefab == Entity.Null) return;
             var o = _request.Plan.Layers[w.Layer].Objects[w.Index];
+            if (SkippedForFarm(w, o)) return;   // (fork, C-R3) inside a vanilla field or the farm's lot
             // s23: decorative decals are built see-through (runtime clone per opacity tier; the original until it is ready).
             if (o.Role == ObjectRole.Decal && _decalClones != null)
             {

@@ -12,7 +12,7 @@ seen in the game runner.
 | 1 Diagnosis | Done | `REMOVAL-DIAGNOSIS.md`, `PARK-RECOGNITION.md` |
 | 2 Land restore (A) | Done, seen in the game | runs `*-restore`, `*-restore-2`; save/load and player-terraform cases covered by unit tests only |
 | 3 Park recognition (B) | Done, seen in the game | runs `*-parks`; citizen leisure counters and uninstall load not run |
-| 4 Farms (C) | Research done (`FARM-ECONOMY.md`); C-R3 build waits for owner review | |
+| 4 Farms (C) | Built behind "Farms produce" (off by default), seen in the game | runs `*-farms`; hiring, harvests and exports not seen (runner cannot run the simulation long enough) |
 
 ## Phase 0: foundation (branch `fork/foundation`)
 1. Commit upstream as-is plus `docs/fork/` and the fork `CLAUDE.md` section. Create the GitHub fork under

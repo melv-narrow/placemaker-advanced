@@ -106,6 +106,8 @@ namespace Placemaker.Core.Build
         public string ReasonKey;
         /// <summary>(fork, B-R1) The specific cause when none was found (localisation key, Placemaker.ParkStats.Why.*), "" when found.</summary>
         public string DetailKey;
+        /// <summary>How far the search got, for logs: samples along a road, lots that left the outline, lots on a road, lots blocked.</summary>
+        public string Trace;
     }
 
     public static class ParkCompanionPlanner
@@ -149,6 +151,14 @@ namespace Placemaker.Core.Build
         /// </summary>
         public static ParkCompanionSite Find(IReadOnlyList<float2> outline, IReadOnlyList<NearbyNet> nets,
             IReadOnlyList<float2> objects = null, IReadOnlyList<(float2 a, float2 b, float halfWidth)> paths = null)
+            => FindLot(outline, nets, objects, paths, LotSize, LotSize);
+
+        /// <summary>
+        /// (fork, C-R3) The same frontage search for a lot of any size: <paramref name="width"/> along the road,
+        /// <paramref name="depth"/> away from it (a vanilla farm hub is several 8 m cells each way).
+        /// </summary>
+        public static ParkCompanionSite FindLot(IReadOnlyList<float2> outline, IReadOnlyList<NearbyNet> nets,
+            IReadOnlyList<float2> objects, IReadOnlyList<(float2 a, float2 b, float halfWidth)> paths, float width, float depth)
         {
             // (fork, B-R4) No relaxed second try: the building's front must touch the road (RoadConnectionSystem), so a lot
             // pulled inside an outline that stops short of the kerb would stand unconnected. The player gets the reason instead.
@@ -170,9 +180,9 @@ namespace Placemaker.Core.Build
             }
             if (roads.Count == 0) return none;
 
-            float half8 = LotSize * 0.5f;
+            float halfW = Math.Max(1f, width) * 0.5f, halfD = Math.Max(1f, depth) * 0.5f, halfMax = Math.Max(halfW, halfD);
             // How far the search got, for the reason (B-R1): the deepest stage any sample reached.
-            int longEdges = 0, alongRoad = 0, fits = 0;
+            int longEdges = 0, alongRoad = 0, fits = 0, outside = 0, onRoads = 0;
             bool found = false;
             double bestScore = double.MinValue;
             var best = none;
@@ -181,7 +191,7 @@ namespace Placemaker.Core.Build
             {
                 float2 a = outline[e], b = outline[(e + 1) % count];
                 float len = math.distance(a, b);
-                if (len < LotSize) continue;
+                if (len < halfW * 2f) continue;
                 longEdges++;
                 int steps = Math.Max(1, (int)(len / 2f));
                 for (int s = 0; s <= steps; s++)
@@ -200,27 +210,31 @@ namespace Placemaker.Core.Build
                     if (rd - road.half > MaxFrontageGap) continue;
                     alongRoad++;
                     float2 dir = rd > 1e-3f ? (p - rq) / rd : Perp(road.b - road.a);
-                    float2 centre = rq + dir * (road.half + CurbGap + half8);
-                    // lot inside the outline
+                    float2 centre = rq + dir * (road.half + CurbGap + halfD);
+                    // lot inside the outline; its front (c < 2) may reach out over the verge between the outline and the kerb
+                    // (fork: an outline drawn a few metres short of the kerb left every lot "outside" and the park or farm unbuilt)
                     float2 fwd = -dir, side = new float2(fwd.y, -fwd.x);
-                    bool inside = Poly.Contains(outline, centre);
+                    bool inside = Poly.Contains(outline, centre - fwd * (halfD * 0.5f));   // the back half of the lot
                     for (int c = 0; c < 4 && inside; c++)
                     {
-                        float2 corner = centre + fwd * (c < 2 ? half8 : -half8) + side * (c % 2 == 0 ? half8 : -half8);
-                        if (!Poly.Contains(outline, corner) && Poly.DistanceToBoundary(outline, corner) > 0.75f) inside = false;
+                        float2 corner = centre + fwd * (c < 2 ? halfD : -halfD) + side * (c % 2 == 0 ? halfW : -halfW);
+                        if (Poly.Contains(outline, corner) || Poly.DistanceToBoundary(outline, corner) <= 0.75f) continue;
+                        // a front corner may stand over the verge, straight toward the road only (never beside the outline)
+                        if (c < 2 && Poly.Contains(outline, corner + dir * (MaxFrontageGap + 0.75f))) continue;
+                        inside = false;
                     }
-                    if (!inside) continue;
+                    if (!inside) { outside++; continue; }
                     // clear of every road (the lot must not sit on one)
                     bool onRoad = false;
                     foreach (var rr in roads)
-                        if (math.distance(Closest(rr.a, rr.b, centre), centre) < rr.half + half8 - 0.25f) { onRoad = true; break; }
-                    if (onRoad) continue;
+                        if (math.distance(Closest(rr.a, rr.b, centre), centre) < rr.half + halfD - 0.25f) { onRoad = true; break; }
+                    if (onRoad) { onRoads++; continue; }
                     fits++;
                     float clear = 12f;
                     if (objects != null)
-                        foreach (var o in objects) clear = Math.Min(clear, math.distance(o, centre) - half8);
+                        foreach (var o in objects) clear = Math.Min(clear, math.distance(o, centre) - halfMax);
                     if (paths != null)
-                        foreach (var pa in paths) clear = Math.Min(clear, math.distance(Closest(pa.a, pa.b, centre), centre) - pa.halfWidth - half8);
+                        foreach (var pa in paths) clear = Math.Min(clear, math.distance(Closest(pa.a, pa.b, centre), centre) - pa.halfWidth - halfMax);
                     if (clear < 0f) continue;
                     float corner2 = float.MaxValue;
                     foreach (var v in outline) corner2 = Math.Min(corner2, math.distance(v, centre));
@@ -233,6 +247,7 @@ namespace Placemaker.Core.Build
                     }
                 }
             }
+            best.Trace = $"{roads.Count} road pieces, {longEdges} long sides, {alongRoad} spots along a road, {outside} leave the outline, {onRoads} on a road, {fits} fit";
             if (!found)
                 best.DetailKey = longEdges == 0 ? WhyShortEdges : alongRoad == 0 ? WhyNotAlongRoad : fits == 0 ? WhyNoRoom : WhyBlocked;
             return best;
