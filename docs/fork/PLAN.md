@@ -4,6 +4,16 @@ What and why: `SPEC.md`. Original brief: `PLAN-v1.md`. One branch per workstream
 Each step ends with evidence: log lines, pictures, or a document. A step that changes the world is not done until
 seen in the game runner.
 
+## Status (2026-11-10)
+
+| Phase | State | Evidence |
+|---|---|---|
+| 0 Foundation | Done (mod id and name wait for the publish decision) | compile on 1.6.3f1, runner on this machine, NOTICE.md |
+| 1 Diagnosis | Done | `REMOVAL-DIAGNOSIS.md`, `PARK-RECOGNITION.md` |
+| 2 Land restore (A) | Done, seen in the game | runs `*-restore`, `*-restore-2`; save/load and player-terraform cases covered by unit tests only |
+| 3 Park recognition (B) | Done, seen in the game | runs `*-parks`; citizen leisure counters and uninstall load not run |
+| 4 Farms (C) | Research done (`FARM-ECONOMY.md`); C-R3 build waits for owner review | |
+
 ## Phase 0: foundation (branch `fork/foundation`)
 1. Commit upstream as-is plus `docs/fork/` and the fork `CLAUDE.md` section. Create the GitHub fork under
    melv-narrow (`gh auth switch -u melv-narrow` first), push.

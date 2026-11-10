@@ -58,20 +58,21 @@ have a research step in the plan before any feature code depends on them.
 | ID | Requirement |
 |---|---|
 | A-R1 | Each build gets a stable `BuildGuid` (receipt v3). Sidecars and snapshots are keyed by it, never by group id. |
-| A-R2 | Before the first terraform or paint write, capture the **GPU base heightmap** texels covering outline + 12 m rim (the pit-check rim), whether or not the build terraforms. |
+| A-R2 | Before the first terraform or paint write, capture the **GPU base heightmap**, world heightmap and both user splatmaps over outline + terraform and paint rings + 24 m. Builds that neither terraform nor paint write nothing to the ground and get no snapshot. *(As built.)* |
 | A-R3 | After the build settles, capture the same texels again (post state). |
 | A-R4 | **(spike)** Capture splatmap texels (both maps) for the paint footprint before and after painting. If readback or region write-back is not reliable, use the fallback in A-R7. |
-| A-R5 | Snapshots are stored as a compressed, versioned sidecar `ModsData/Placemaker/restore/<BuildGuid>.bin`, holding only texels that changed between pre and post. Budget: under 2 MB per build typical; log the size. |
-| A-R6 | On removal (final block **and** `GiveUp`), queue a restore that runs a few frames after the members' `Deleted` is processed, from `BuildService` (which already owns apply-wait-measure). Per texel: restore the pre value only where current equals post (exact for R16 texels, small tolerance allowed); otherwise skip as player-modified. |
+| A-R5 | Snapshots are stored as a Deflate-compressed, versioned sidecar `ModsData/Placemaker/restore/<BuildGuid>.bin` holding the full before and after rectangles (unchanged texels compress to almost nothing). Measured 0.1 to 3.6 KB per build; size logged. *(As built.)* |
+| A-R6 | On removal (final block; **not** on `GiveUp`, where elements left in the city stand on the build's ground), queue a restore that runs a few frames after the members' `Deleted` is processed, from `BuildService` (which already owns apply-wait-measure). Per texel: restore the pre value only where current equals post (exact for R16 texels, small tolerance allowed); otherwise skip as player-modified. |
 | A-R7 | Paint: restore pre texels where current equals post. Fallback if A-R4 fails: per-material `EraseDither` inside the stored paint mask only, documented as also erasing player paint of the same material in that mask. |
 | A-R8 | After removal, `Elevation` added by `PinMarkerNets` to nodes that are not group members is removed. Pinning stops marking foreign nodes, or records which ones it marked. |
 | A-R9 | Edit and rebuild (`DoWaitReplaced`, BuildService.cs:362-367) waits until the old build's restore has finished before the new build reads "before" ground. |
 | A-R10 | Builds that fail or are cancelled after their first terrain write also restore (today `DoCleanup` without `_applied` leaves terraform and paint, BuildService.cs:654-673). |
 | A-R11 | Overlapping builds: removing an older build never undoes a newer one. Guaranteed by the current == post rule; covered by a test. |
 | A-R12 | Setting `RestoreLandOnRemove`, default on. Builds with no snapshot behave as today, logged once per removal. |
-| A-R13 | One log line per removal: texels restored, skipped as modified, max residual (m), paint result (restored / erased / skipped), sidecar deleted. |
+| A-R13 | One log line per removal: texels restored, skipped as modified, max residual (m), paint result. *(As built.)* |
 | A-R14 | A "Remove all Placemaker builds" action (Settings) so a player can leave the mod with clean land. |
-| A-R15 | Sidecar housekeeping: on load, sidecars whose `BuildGuid` is in no group of this city are kept (they may belong to another save) but ignored; a size report is logged. Never delete a sidecar without a GUID match. |
+| A-R15 | Sidecars are never deleted automatically: an older save of the same city may still hold the build and remove it again later. They are a few KB each. *(As built; a manual clean-up can come later.)* |
+| A-R16 | Ordering *(added after review)*: a build waits before its "before" capture while any restore or group removal is pending; removal restores wait while a build holds a capture and until no removal is in progress, then run newest build first; a failed build rolls back completely (before or after Apply). |
 
 ### Write-back method **(spike decides)**
 - **Option 1, ReplaceHeightmap patch** (preferred if safe): read current base heightmap, patch footprint texels,
@@ -112,10 +113,10 @@ have a research step in the plan before any feature code depends on them.
 | B-R1 | Frontage search returns a specific reason: no road within range, no edge long enough, lot does not fit, blocked by objects or paths, blocked by zoning. Logged and shown. |
 | B-R2 | After creation, verify the companion has a road connection (vanilla `Building.m_RoadEdge` or equivalent); log result. |
 | B-R3 | Review keeps the prediction and adds the reason. Managed groups list gets a post-build status: recognised / tourism only / not recognised, with reason (`ManagedGroup.stats`, contract.ts:484-491). |
-| B-R4 | Fallback when there is no clean frontage: try more outline positions and sizes; if none, warn clearly. Never a mesh-less building (RESEARCH-NOTES 16). Connector road only if it is low-risk, decided in B0. |
+| B-R4 | *(As built: warn only.)* A relaxed search was tried and dropped, because the building's front must touch the road to be connected. The player gets the specific reason and "draw the area up to the kerb". Original: fallback when there is no clean frontage: try more outline positions and sizes; if none, warn clearly. Never a mesh-less building (RESEARCH-NOTES 16). Connector road only if it is low-risk, decided in B0. |
 | B-R5 | On load, re-request missing companions (state 0 or 1). Settings toggles apply live. |
 | B-R6 | Uninstall path tested: obsolete-prefab load does not crash; documented steps; the "remove all" action (A-R14) also covers it. |
-| B-R7 | `park-companions.txt` pruned to clones referenced by loaded groups (only after a GUID-safe check across saves, or never; decided in B0). |
+| B-R7 | `park-companions.txt` is never pruned (shared by every save on the machine). *(Decided in B0.)* |
 
 ### Acceptance
 Game runner, several park types, with and without road frontage: companion exists or a specific reason is shown; the
