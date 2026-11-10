@@ -361,6 +361,9 @@ namespace Placemaker.Game.Settings
                 global::Placemaker.Game.Build.BuildService.ChargeNetConstruction = ChargeNetConstruction;
                 global::Placemaker.Game.Build.BuildService.DebugTerrainDump = DebugTerrainDump;
                 global::Placemaker.Game.Restore.LandRestoreSystem.Enabled = RestoreLandOnRemove;
+                if (global::Placemaker.Game.Build.BuildService.ApplyParkStats != ApplyParkStats
+                    || global::Placemaker.Game.Economy.ParkCompanionSystem.Enabled != RealParkStats)
+                    global::Placemaker.Game.Groups.GroupRegistrySystem.ParkStatsSettingsChanged = true;
                 global::Placemaker.Game.Build.BuildService.ApplyParkStats = ApplyParkStats;
                 global::Placemaker.Game.Economy.ParkCompanionSystem.Enabled = RealParkStats;
                 global::Placemaker.Game.Groups.OwnerAreaPrefabSystem.FeatureEnabled = SelectAsOneThing;

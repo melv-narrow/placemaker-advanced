@@ -326,6 +326,31 @@ namespace Placemaker.Game.UI
 
         private readonly Dictionary<int, bool> _canEdit = new Dictionary<int, bool>();
 
+        /// <summary>(fork, B-R3) contract.ts ParkRecognition for a park build, from the live game; null for other builds.</summary>
+        private JsonValue ParkRecognition(int id)
+        {
+            try
+            {
+                var registry = World.GetExistingSystemManaged<Placemaker.Game.Groups.GroupRegistrySystem>();
+                var rec = registry?.GetRecord(id);
+                var ps = rec?.ParkStats;
+                if (ps == null) return null;
+                var companions = World.GetExistingSystemManaged<Placemaker.Game.Economy.ParkCompanionSystem>();
+                string why = ps.Applied.TryGetValue(Placemaker.Core.Build.ParkStatIds.CompanionWhy, out var code) ? Placemaker.Core.Build.ParkCompanionPlanner.WhyKey(code) : "";
+                var companion = companions != null ? companions.FindCompanion(id) : Unity.Entities.Entity.Null;
+                string status;
+                if (companion != Unity.Entities.Entity.Null)
+                    status = companions.IsConnected(companion) ? "yes" : why == Placemaker.Core.Build.ParkCompanionPlanner.WhyNoConnection ? "noConnection" : "pending";
+                else if (companions != null && companions.Available && ps.Applied.ContainsKey(Placemaker.Core.Build.ParkStatIds.Companion)) status = "pending";
+                else if (Placemaker.Game.Build.BuildService.ApplyParkStats || Placemaker.Game.Economy.ParkCompanionSystem.Enabled) status = "tourism";
+                else status = "off";
+                var o = JsonValue.Obj().Set("status", status);
+                if (status != "yes" && !string.IsNullOrEmpty(why)) o.Set("whyKey", why);
+                return o;
+            }
+            catch (Exception) { return null; }
+        }
+
         private void PushManaged()
         {
             int id = _tool.ManagedGroup != 0 ? _tool.ManagedGroup : _tool.HoverGroup;
@@ -349,6 +374,8 @@ namespace Placemaker.Game.UI
             o.Set("stats", UiModels.Stats(info.Stats));
             o.Set("upkeep", Math.Round(info.Upkeep));
             o.Set("canEdit", canEdit);
+            var park = ParkRecognition(id);
+            if (park != null) o.Set("park", park);
             _managed.Update(o.ToString());
         }
     }

@@ -131,7 +131,15 @@ namespace Placemaker.Game.Groups
                 if (_postLoadPending)
                 {
                     _postLoadPending = false;
+                    ParkStatsSettingsChanged = false;
                     PostLoadRepair();
+                }
+                else if (ParkStatsSettingsChanged)
+                {
+                    // (fork, B-R5) the park stats settings changed in Options: apply them now, not on the next load
+                    ParkStatsSettingsChanged = false;
+                    EnsureIndex();
+                    SyncParkStats();
                 }
                 if (!_changedMemberQuery.IsEmptyIgnoreFilter || !_changedRecordQuery.IsEmptyIgnoreFilter)
                 {

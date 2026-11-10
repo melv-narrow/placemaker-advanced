@@ -1,0 +1,8 @@
+{
+  "Placemaker.ParkStats.Why.NoRoad": "There is no road within 30 m of the area.",
+  "Placemaker.ParkStats.Why.ShortEdges": "No side of the area is at least 8 m long.",
+  "Placemaker.ParkStats.Why.NotAlongRoad": "No side of the area runs along a road: draw the area up to the kerb (within 6 m).",
+  "Placemaker.ParkStats.Why.NoRoom": "The sides along the road are too narrow for the park's 8 m road lot.",
+  "Placemaker.ParkStats.Why.Blocked": "Every spot along the road is taken by paths, objects or zoning gaps.",
+  "Placemaker.ParkStats.Why.NoConnection": "The city did not connect the park's hidden road lot to the road."
+}

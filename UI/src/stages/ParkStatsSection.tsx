@@ -118,7 +118,12 @@ export const ParkStatsSection = ({ ps, pending }: { ps: ParkStatsView; pending: 
                         </div>
                     </div>
                     {ps.companion === "noRoad" ? (
-                        <Tip title={t("Placemaker.UI.ParkStats.NoRoad", "No road edge: only tourism applies.")}>
+                        <Tip
+                            title={
+                                t("Placemaker.UI.ParkStats.NoRoad", "No road edge: only tourism applies.") +
+                                (ps.companionWhy ? " " + t(ps.companionWhy, "") : "")
+                            }
+                        >
                             <div className={s.warn} data-testid="park-stats-no-road">
                                 <Icon name="info" size={11} tint="warn" />
                                 <div className={s.warnText}>{t("Placemaker.UI.ParkStats.NoRoadShort", "No road edge")}</div>

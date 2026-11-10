@@ -119,6 +119,25 @@ namespace Placemaker.Tests
         }
 
         [Fact]
+        public void EachFailureSaysWhy()
+        {
+            var outline = Rect(100, 60);
+            Assert.Equal(ParkCompanionPlanner.WhyNoRoad, ParkCompanionPlanner.Find(outline, new NearbyNet[0]).DetailKey);
+            Assert.Equal(ParkCompanionPlanner.WhyNotAlongRoad, ParkCompanionPlanner.Find(outline, new[] { Road(-40) }).DetailKey);
+            var tiny = Rect(6, 6);
+            Assert.Equal(ParkCompanionPlanner.WhyShortEdges, ParkCompanionPlanner.Find(tiny, new[] { Road(-7) }).DetailKey);
+            // a strip only 5 m deep along the road: the 8 m lot never fits inside
+            Assert.Equal(ParkCompanionPlanner.WhyNoRoom, ParkCompanionPlanner.Find(Rect(100, 5), new[] { Road(-7) }).DetailKey);
+            var crowd = new List<float2>();
+            for (float x = 0; x <= 100; x += 2) for (float z = 0; z <= 60; z += 2) crowd.Add(new float2(x, z));
+            Assert.Equal(ParkCompanionPlanner.WhyBlocked, ParkCompanionPlanner.Find(outline, new[] { Road(-7) }, crowd).DetailKey);
+            var ok = ParkCompanionPlanner.Find(outline, new[] { Road(-7) });
+            Assert.Equal("", ok.DetailKey);
+            // an outline that stops 10 m short of the kerb: not along a road (the player is told to draw up to it)
+            Assert.Equal(ParkCompanionPlanner.WhyNotAlongRoad, ParkCompanionPlanner.Find(outline, new[] { Road(-16) }).DetailKey);
+        }
+
+        [Fact]
         public void FindIsDeterministic()
         {
             var outline = Rect(80, 80);

@@ -28,6 +28,10 @@ namespace Placemaker.Core.Build
         public const string InGameAttractiveness = "attractiveness.inGame";
         /// <summary>ParkStatsRecord.Applied key: 1 once the companion park building exists (it carries every stat).</summary>
         public const string Companion = "companion";
+        /// <summary>(fork, B-R1) Applied key: why the build has no companion (ParkCompanionPlanner.WhyCode), absent = it has one.</summary>
+        public const string CompanionWhy = "companion.why";
+        /// <summary>(fork, B-R5) Applied keys: where the companion was requested, so a lost one can be requested again after load.</summary>
+        public const string CompanionX = "companion.x", CompanionZ = "companion.z", CompanionYaw = "companion.yaw";
 
         /// <summary>Display order. Save format: never rename an id.</summary>
         public static readonly string[] All = { Attractiveness, Leisure, Range, Capacity, Entertainment, Upkeep };

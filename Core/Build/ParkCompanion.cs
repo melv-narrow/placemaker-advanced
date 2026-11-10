@@ -104,6 +104,8 @@ namespace Placemaker.Core.Build
         public long Road;
         /// <summary>Why none was found (localisation key), "" when found.</summary>
         public string ReasonKey;
+        /// <summary>(fork, B-R1) The specific cause when none was found (localisation key, Placemaker.ParkStats.Why.*), "" when found.</summary>
+        public string DetailKey;
     }
 
     public static class ParkCompanionPlanner
@@ -115,6 +117,29 @@ namespace Placemaker.Core.Build
         /// <summary>The outline counts as fronting a road when it runs this close to the road's edge.</summary>
         public const float MaxFrontageGap = 6f;
         public const string NoRoadKey = "Placemaker.ParkStats.NoRoadEdge";
+        public const string WhyNoRoad = "Placemaker.ParkStats.Why.NoRoad";
+        public const string WhyShortEdges = "Placemaker.ParkStats.Why.ShortEdges";
+        public const string WhyNotAlongRoad = "Placemaker.ParkStats.Why.NotAlongRoad";
+        public const string WhyNoRoom = "Placemaker.ParkStats.Why.NoRoom";
+        public const string WhyBlocked = "Placemaker.ParkStats.Why.Blocked";
+        /// <summary>After the build: a companion stands but the game gave it no road connection.</summary>
+        public const string WhyNoConnection = "Placemaker.ParkStats.Why.NoConnection";
+
+        private static readonly string[] s_whyByCode = { "", WhyNoRoad, WhyShortEdges, WhyNotAlongRoad, WhyNoRoom, WhyBlocked, WhyNoConnection };
+
+        /// <summary>Save code of a reason key (receipt Applied values are numbers). Values are save format: never renumber.</summary>
+        public static int WhyCode(string key)
+        {
+            for (int i = 1; i < s_whyByCode.Length; i++) if (s_whyByCode[i] == key) return i;
+            return 0;
+        }
+
+        /// <summary>Reason key of a save code, "" when unknown.</summary>
+        public static string WhyKey(double code)
+        {
+            int i = (int)Math.Round(code);
+            return i > 0 && i < s_whyByCode.Length ? s_whyByCode[i] : "";
+        }
 
         /// <summary>
         /// Best spot for the companion: on a stretch of the outline that runs along a road, the lot fully inside the
@@ -125,7 +150,9 @@ namespace Placemaker.Core.Build
         public static ParkCompanionSite Find(IReadOnlyList<float2> outline, IReadOnlyList<NearbyNet> nets,
             IReadOnlyList<float2> objects = null, IReadOnlyList<(float2 a, float2 b, float halfWidth)> paths = null)
         {
-            var none = new ParkCompanionSite { ReasonKey = NoRoadKey };
+            // (fork, B-R4) No relaxed second try: the building's front must touch the road (RoadConnectionSystem), so a lot
+            // pulled inside an outline that stops short of the kerb would stand unconnected. The player gets the reason instead.
+            var none = new ParkCompanionSite { ReasonKey = NoRoadKey, DetailKey = WhyNoRoad };
             if (outline == null || outline.Count < 3 || nets == null || nets.Count == 0) return none;
             var roads = new List<(float2 a, float2 b, float half, long id)>();
             foreach (var n in nets)
@@ -144,6 +171,8 @@ namespace Placemaker.Core.Build
             if (roads.Count == 0) return none;
 
             float half8 = LotSize * 0.5f;
+            // How far the search got, for the reason (B-R1): the deepest stage any sample reached.
+            int longEdges = 0, alongRoad = 0, fits = 0;
             bool found = false;
             double bestScore = double.MinValue;
             var best = none;
@@ -153,6 +182,7 @@ namespace Placemaker.Core.Build
                 float2 a = outline[e], b = outline[(e + 1) % count];
                 float len = math.distance(a, b);
                 if (len < LotSize) continue;
+                longEdges++;
                 int steps = Math.Max(1, (int)(len / 2f));
                 for (int s = 0; s <= steps; s++)
                 {
@@ -168,6 +198,7 @@ namespace Placemaker.Core.Build
                     if (ri < 0) continue;
                     var road = roads[ri];
                     if (rd - road.half > MaxFrontageGap) continue;
+                    alongRoad++;
                     float2 dir = rd > 1e-3f ? (p - rq) / rd : Perp(road.b - road.a);
                     float2 centre = rq + dir * (road.half + CurbGap + half8);
                     // lot inside the outline
@@ -184,6 +215,7 @@ namespace Placemaker.Core.Build
                     foreach (var rr in roads)
                         if (math.distance(Closest(rr.a, rr.b, centre), centre) < rr.half + half8 - 0.25f) { onRoad = true; break; }
                     if (onRoad) continue;
+                    fits++;
                     float clear = 12f;
                     if (objects != null)
                         foreach (var o in objects) clear = Math.Min(clear, math.distance(o, centre) - half8);
@@ -197,10 +229,12 @@ namespace Placemaker.Core.Build
                     {
                         found = true;
                         bestScore = score;
-                        best = new ParkCompanionSite { Found = true, Position = centre, Yaw = math.atan2(fwd.x, fwd.y), Road = road.id, ReasonKey = "" };
+                        best = new ParkCompanionSite { Found = true, Position = centre, Yaw = math.atan2(fwd.x, fwd.y), Road = road.id, ReasonKey = "", DetailKey = "" };
                     }
                 }
             }
+            if (!found)
+                best.DetailKey = longEdges == 0 ? WhyShortEdges : alongRoad == 0 ? WhyNotAlongRoad : fits == 0 ? WhyNoRoom : WhyBlocked;
             return best;
         }
 

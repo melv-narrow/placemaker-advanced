@@ -464,6 +464,8 @@ export interface ParkStatsView {
   /** s17 companion park building: "yes" = every stat is real (hidden park building at the road edge), "noRoad" = the
    *  setting is on but no road frontage was found (only attractiveness applies), "off" = setting off (attractiveness only). */
   companion?: "yes" | "noRoad" | "off";
+  /** (fork, B-R1) With companion "noRoad": why no spot was found (localisation key, Placemaker.ParkStats.Why.*). */
+  companionWhy?: string;
   /** Quality multiplier 0.55–2 (trees, water, landmarks, amenities, play, seating). */
   quality: number;
   stats: ParkStatView[];
@@ -488,6 +490,17 @@ export interface ManagedGroup {
   stats: Stat[];
   upkeep: number;
   canEdit: boolean;
+  /** (fork, B-R3) Park types only: whether the city counts this build as a park, from the live game. */
+  park?: ParkRecognition;
+}
+
+/** (fork, B-R3) "yes" = a park for the city (leisure, coverage, land value, tourism); "pending" = the hidden park building is
+ *  on its way or waiting for the simulation to connect it; "noConnection" = it stands but the game gave it no road;
+ *  "tourism" = only attractiveness counts (no hidden park building); "off" = both park settings are off. */
+export interface ParkRecognition {
+  status: "yes" | "pending" | "noConnection" | "tourism" | "off";
+  /** Why it is not "yes" (localisation key, Placemaker.ParkStats.Why.*), when known. */
+  whyKey?: string;
 }
 
 export const Values = {

@@ -1,0 +1,154 @@
+{
+  "set": "parks",
+  "description": "Fork Workstream B: does the city count Placemaker parks? Each build is followed by a short run of the simulation so the game can connect the hidden park building; Placemaker.log says whether it got a road connection, or why there is no companion.",
+  "scenarios": [
+    {
+      "id": "park-frontage",
+      "site": "flat",
+      "steps": [
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "park",
+          "preset": "formal"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "grow",
+          "seconds": 30
+        },
+        {
+          "do": "select"
+        },
+        {
+          "do": "wait",
+          "seconds": 2
+        }
+      ]
+    },
+    {
+      "id": "park-inner",
+      "site": "flat",
+      "steps": [
+        {
+          "do": "area",
+          "tool": "points",
+          "rect": [
+            70,
+            60
+          ]
+        },
+        {
+          "do": "type",
+          "layer": "park",
+          "preset": "formal"
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "grow",
+          "seconds": 30
+        },
+        {
+          "do": "select"
+        },
+        {
+          "do": "wait",
+          "seconds": 2
+        }
+      ]
+    },
+    {
+      "id": "plaza-frontage",
+      "site": "flat",
+      "steps": [
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "plaza",
+          "preset": ""
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "grow",
+          "seconds": 30
+        },
+        {
+          "do": "select"
+        },
+        {
+          "do": "wait",
+          "seconds": 2
+        }
+      ]
+    },
+    {
+      "id": "playground-frontage",
+      "site": "flat",
+      "steps": [
+        {
+          "do": "area",
+          "tool": "bucket"
+        },
+        {
+          "do": "type",
+          "layer": "adventurePlayground",
+          "preset": ""
+        },
+        {
+          "do": "entrances"
+        },
+        {
+          "do": "preview"
+        },
+        {
+          "do": "build",
+          "shot": "built"
+        },
+        {
+          "do": "grow",
+          "seconds": 30
+        },
+        {
+          "do": "select"
+        },
+        {
+          "do": "wait",
+          "seconds": 2
+        }
+      ]
+    }
+  ]
+}

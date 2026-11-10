@@ -905,6 +905,7 @@ namespace Placemaker.Core.Tool
                 .Set("keepVanilla", r.KeepVanilla)
                 .Set("companion", r.Companion == Placemaker.Core.Build.ParkCompanionState.Yes ? "yes"
                     : r.Companion == Placemaker.Core.Build.ParkCompanionState.NoRoad ? "noRoad" : "off")
+                .Set("companionWhy", r.Companion == Placemaker.Core.Build.ParkCompanionState.NoRoad ? r.Site.DetailKey ?? "" : "")
                 .Set("quality", Math.Round(r.Quality, 2));
             var arr = JsonValue.Arr();
             foreach (var st in r.Stats)

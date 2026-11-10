@@ -102,12 +102,19 @@ namespace Placemaker.Game.Build
                 if (!site.Found)
                 {
                     NoteSkip("Placemaker.Build.NoRoadEdge", null, IssueSeverity.Info, 0);
-                    Mod.Log.Info($"Placemaker: group {_groupId} has no road frontage for a park companion; only attractiveness applies.");
+                    // (fork, B-R1) the specific cause, kept with the build for the Manage panel
+                    rec.ParkStats.Applied[ParkStatIds.CompanionWhy] = ParkCompanionPlanner.WhyCode(site.DetailKey);
+                    Mod.Log.Info($"Placemaker: group {_groupId} has no road frontage for a park companion ({site.DetailKey}, {nets.Count} net(s) within 30 m); only attractiveness applies.");
                     return;
                 }
                 string name = ParkStatsEstimator.KeyOf(stats).Name;
                 companions.Request(_groupId, name, site.Position, site.Yaw);
                 rec.ParkStats.Applied[ParkStatIds.Companion] = 0;   // requested; 1 once it exists
+                rec.ParkStats.Applied.Remove(ParkStatIds.CompanionWhy);
+                // (fork, B-R5) where it goes, so a companion lost later can be requested again after a load
+                rec.ParkStats.Applied[ParkStatIds.CompanionX] = site.Position.x;
+                rec.ParkStats.Applied[ParkStatIds.CompanionZ] = site.Position.y;
+                rec.ParkStats.Applied[ParkStatIds.CompanionYaw] = site.Yaw;
                 Mod.Log.Info($"Placemaker: group {_groupId} park companion '{name}' requested at {site.Position}.");
             }
             catch (Exception e)

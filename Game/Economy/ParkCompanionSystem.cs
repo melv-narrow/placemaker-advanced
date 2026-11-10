@@ -225,6 +225,14 @@ namespace Placemaker.Game.Economy
         private GroupRegistrySystem _registry;
         private TerrainSystem _terrain;
         private readonly List<Pending> _pending = new List<Pending>();
+
+        // (fork, B-R2) Companions created this session, checked for a road connection once the simulation has run a while
+        // (RoadConnectionSystem is a simulation system: nothing connects while the game is paused).
+        private struct Verify { public int GroupId; public Entity Companion; public uint SimFrame; public int Frame; }
+        private readonly List<Verify> _verify = new List<Verify>();
+        private const uint VerifySimFrames = 256;
+        private const int VerifyGiveUpFrames = 20000;
+        private SimulationSystem _simulation;
         private readonly HashSet<Entity> _mutated = new HashSet<Entity>();
         private bool _failed;
 
@@ -235,9 +243,18 @@ namespace Placemaker.Game.Economy
             _prefabs = World.GetOrCreateSystemManaged<ParkCompanionPrefabSystem>();
             _registry = World.GetOrCreateSystemManaged<GroupRegistrySystem>();
             _terrain = World.GetOrCreateSystemManaged<TerrainSystem>();
+            _simulation = World.GetOrCreateSystemManaged<SimulationSystem>();
         }
 
         public bool Available => Enabled && !_failed && !_prefabs.Failed;
+
+        protected override void OnGamePreload(Colossal.Serialization.Entities.Purpose purpose, GameMode mode)
+        {
+            base.OnGamePreload(purpose, mode);
+            // Entities of the old world: an index may come back in the new one as something else.
+            _verify.Clear();
+            _pending.Clear();
+        }
 
         public void Request(int groupId, string prefabName, float2 position, float yaw)
         {
@@ -250,6 +267,7 @@ namespace Placemaker.Game.Economy
         [Preserve]
         protected override void OnUpdate()
         {
+            if (_verify.Count > 0 && (UnityEngine.Time.frameCount & 15) == 0) CheckConnections();
             if (_pending.Count == 0) return;
             if (!Available) { _pending.Clear(); return; }
             try
@@ -324,6 +342,52 @@ namespace Placemaker.Game.Economy
             }
             _registry.MarkDirty();
             Mod.Log.Info($"Placemaker created the park companion of group {p.GroupId} ('{p.Name}').");
+            _verify.Add(new Verify { GroupId = p.GroupId, Companion = e, SimFrame = _simulation.frameIndex, Frame = UnityEngine.Time.frameCount });
+        }
+
+        /// <summary>(fork, B-R2) A companion loaded with a save: check its road connection again once the simulation runs.</summary>
+        public void Watch(int groupId, Entity companion)
+        {
+            if (companion == Entity.Null || IsConnected(companion)) return;
+            _verify.RemoveAll(v => v.GroupId == groupId);
+            _verify.Add(new Verify { GroupId = groupId, Companion = companion, SimFrame = _simulation.frameIndex, Frame = UnityEngine.Time.frameCount });
+        }
+
+        /// <summary>True when the companion has the road connection the game needs for leisure and coverage.</summary>
+        public bool IsConnected(Entity companion) =>
+            companion != Entity.Null && EntityManager.Exists(companion) && EntityManager.HasComponent<Building>(companion)
+            && EntityManager.GetComponentData<Building>(companion).m_RoadEdge != Entity.Null;
+
+        /// <summary>(fork, B-R2) The game connects a building to its road in the simulation: record what it did.</summary>
+        private void CheckConnections()
+        {
+            for (int i = _verify.Count - 1; i >= 0; i--)
+            {
+                var v = _verify[i];
+                bool gone = !EntityManager.Exists(v.Companion) || EntityManager.HasComponent<Deleted>(v.Companion);
+                bool connected = !gone && IsConnected(v.Companion);
+                bool ran = _simulation.frameIndex - v.SimFrame >= VerifySimFrames;
+                if (!gone && !connected && !ran)
+                {
+                    if (UnityEngine.Time.frameCount - v.Frame > VerifyGiveUpFrames) _verify.RemoveAt(i);   // paused for good: unknown
+                    continue;
+                }
+                _verify.RemoveAt(i);
+                if (gone) continue;
+                try
+                {
+                    var rec = _registry.GetRecord(v.GroupId);
+                    if (rec?.ParkStats != null && _registry.TryGetRecordEntity(v.GroupId, out var record))
+                    {
+                        if (connected) rec.ParkStats.Applied.Remove(ParkStatIds.CompanionWhy);
+                        else rec.ParkStats.Applied[ParkStatIds.CompanionWhy] = ParkCompanionPlanner.WhyCode(ParkCompanionPlanner.WhyNoConnection);
+                        _registry.WriteRecord(record, rec);
+                    }
+                }
+                catch (Exception ex) { Mod.Log.Warn($"Placemaker: park companion check of group {v.GroupId} not recorded: {ex.Message}"); }
+                if (connected) Mod.Log.Info($"Placemaker: the park companion of group {v.GroupId} is connected to its road; the city counts the park.");
+                else Mod.Log.Warn($"Placemaker: the park companion of group {v.GroupId} got no road connection after {VerifySimFrames} simulation frames; leisure and park coverage will not reach the city.");
+            }
         }
 
         /// <summary>Live park companion of a group, or Entity.Null.</summary>

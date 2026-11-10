@@ -2,10 +2,11 @@
 // Edit / Rename / Remove (with confirmation). The same actions appear in the vanilla selected-info
 // panel via PlacemakerInfoSection.
 import React, { useState } from "react";
-import { ManagedGroup } from "../contract";
+import { ManagedGroup, ParkRecognition } from "../contract";
 import { act } from "../lib/bindings";
 import { Money } from "../lib/format";
 import { useT } from "../lib/l10n";
+import { Tip } from "../lib/tips";
 import { Btn, Icon } from "../components/common";
 import { Confirm } from "../components/dialog";
 import { StatChip } from "./ReviewStage";
@@ -57,6 +58,27 @@ export const RenameField = ({ id, name, onDone }: { id: number; name: string; on
     );
 };
 
+/** (fork, B-R3) "Counts as a park: yes / no, and why" for park builds. */
+const ParkRecognitionRow = ({ park }: { park: ParkRecognition }) => {
+    const { t } = useT();
+    const label: Record<ParkRecognition["status"], string> = {
+        yes: t("Placemaker.UI.Manage.Park.Yes", "Yes: leisure, park coverage and tourism"),
+        pending: t("Placemaker.UI.Manage.Park.Pending", "Not yet: waiting for the city to connect it"),
+        noConnection: t("Placemaker.UI.Manage.Park.NoConnection", "No: not connected to a road"),
+        tourism: t("Placemaker.UI.Manage.Park.Tourism", "Tourism only"),
+        off: t("Placemaker.UI.Manage.Park.Off", "No: park stats are off in Options"),
+    };
+    const why = park.whyKey ? t(park.whyKey, "") : "";
+    return (
+        <Tip title={why || label[park.status]}>
+            <div className={s.manageUpkeep} data-testid="manage-park-status" data-status={park.status}>
+                <div className={s.bigLabel}>{t("Placemaker.UI.Manage.Park.Label", "Counts as a park")}</div>
+                <div className={s.manageKind}>{label[park.status]}</div>
+            </div>
+        </Tip>
+    );
+};
+
 export const ManageStage = ({ group }: { group: ManagedGroup | null }) => {
     const { t, tl } = useT();
     const [renaming, setRenaming] = useState(false);
@@ -91,6 +113,7 @@ export const ManageStage = ({ group }: { group: ManagedGroup | null }) => {
                     ))}
                 </div>
             ) : null}
+            {group.park ? <ParkRecognitionRow park={group.park} /> : null}
             <div className={s.manageUpkeep}>
                 <div className={s.bigLabel}>{t("Placemaker.UI.Review.Upkeep", "Upkeep")}</div>
                 <div className={s.manageUpkeepValue}>

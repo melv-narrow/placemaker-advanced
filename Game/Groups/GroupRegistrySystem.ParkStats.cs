@@ -19,6 +19,9 @@ namespace Placemaker.Game.Groups
 {
     public sealed partial class GroupRegistrySystem
     {
+        /// <summary>Set by the settings when "Park attractiveness counts" or "Real park stats" changed; synced next update.</summary>
+        public static bool ParkStatsSettingsChanged;
+
         private void SyncParkStats()
         {
             int lotAdded = 0, lotRemoved = 0, removed = 0, requested = 0;
@@ -53,6 +56,14 @@ namespace Placemaker.Game.Groups
                                 var f = math.mul(t.m_Rotation, new float3(0, 0, 1));
                                 yaw = math.atan2(f.x, f.z);
                             }
+                            if (!rec.ParkStats.Applied.ContainsKey(ParkStatIds.CompanionX) && EntityManager.HasComponent<global::Game.Objects.Transform>(companion))
+                            {
+                                // a companion from before the fork: keep where it stood, so turning the setting on again restores it
+                                rec.ParkStats.Applied[ParkStatIds.CompanionX] = at.x;
+                                rec.ParkStats.Applied[ParkStatIds.CompanionZ] = at.y;
+                                rec.ParkStats.Applied[ParkStatIds.CompanionYaw] = yaw;
+                                WriteRecord(kv.Value, rec);
+                            }
                             cleanup.Remove(companion);
                             companion = Entity.Null;
                             removed++;
@@ -63,9 +74,23 @@ namespace Placemaker.Game.Groups
                             }
                         }
                     }
-                    else if (wanted && rec.ParkStats.Applied.TryGetValue(ParkStatIds.Companion, out var state) && state == 1)
-                        Mod.Log.Warn($"Placemaker: the park companion of group {kv.Key} is gone (removed by another tool?); its lot carries attractiveness again.");
+                    else if (wanted && rec.ParkStats.Applied.TryGetValue(ParkStatIds.Companion, out var state))
+                    {
+                        // (fork, B-R5) Requested but never created (0), or created and lost since (1): request it again where
+                        // the build put it. Receipts from before the fork have no position: they keep tourism only.
+                        if (rec.ParkStats.Applied.TryGetValue(ParkStatIds.CompanionX, out var x) && rec.ParkStats.Applied.TryGetValue(ParkStatIds.CompanionZ, out var z))
+                        {
+                            rec.ParkStats.Applied.TryGetValue(ParkStatIds.CompanionYaw, out var yaw);
+                            companions.Request(kv.Key, ParkPrefabKey.From(rec.ParkStats.Applied, rec.ParkStats.LeisureType == (int)LeisureKind.CityBeach).Name,
+                                new float2((float)x, (float)z), (float)yaw);
+                            requested++;
+                            Mod.Log.Info($"Placemaker: the park companion of group {kv.Key} was {(state == 1 ? "lost" : "never created")}; requested again.");
+                        }
+                        else if (state == 1)
+                            Mod.Log.Warn($"Placemaker: the park companion of group {kv.Key} is gone (removed by another tool?); its lot carries attractiveness again.");
+                    }
 
+                    if (companion != Entity.Null) companions.Watch(kv.Key, companion);
                     var owner = g.Owner;
                     if (owner == Entity.Null || !EntityManager.Exists(owner)) continue;
                     bool has = rec.ParkStats.Applied.TryGetValue(ParkStatIds.InGameAttractiveness, out double value) && value > 0;
